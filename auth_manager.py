@@ -128,6 +128,8 @@ def login_user(email, password):
         }
         st.session_state[AUTH_STATUS_KEY] = True
         st.session_state[AUTH_MESSAGE_KEY] = f"Welcome back, {user.username}!"
+        # Clear the show_auth flag to return to the main dashboard
+        st.session_state["show_auth"] = False
         return True
     else:
         st.session_state[AUTH_MESSAGE_KEY] = error or "Invalid email or password. Please try again."
@@ -147,6 +149,8 @@ def register_user(username, email, password):
             }
             st.session_state[AUTH_STATUS_KEY] = True
             st.session_state[AUTH_MESSAGE_KEY] = f"Welcome to Neufin, {username}! Your account has been created."
+            # Clear the show_auth flag to return to the main dashboard
+            st.session_state["show_auth"] = False
             return True
         else:
             st.session_state[AUTH_MESSAGE_KEY] = error or "Error creating user account. Please try again."
@@ -235,6 +239,8 @@ def handle_google_identity_token(credential):
         }
         st.session_state[AUTH_STATUS_KEY] = True
         st.session_state[AUTH_MESSAGE_KEY] = f"Welcome, {name}! You've successfully signed in with Google."
+        # Clear the show_auth flag to return to the main dashboard
+        st.session_state["show_auth"] = False
         print(f"Google authentication completed successfully for: {email}")
         
         return True
@@ -371,6 +377,8 @@ def handle_facebook_callback(state, code):
         }
         st.session_state[AUTH_STATUS_KEY] = True
         st.session_state[AUTH_MESSAGE_KEY] = f"Welcome, {name}! You've successfully signed in with Facebook."
+        # Clear the show_auth flag to return to the main dashboard
+        st.session_state["show_auth"] = False
         
         return True
     except Exception as e:
@@ -445,6 +453,8 @@ def handle_google_callback(state, code):
         }
         st.session_state[AUTH_STATUS_KEY] = True
         st.session_state[AUTH_MESSAGE_KEY] = f"Welcome, {name}! You've successfully signed in with Google."
+        # Clear the show_auth flag to return to the main dashboard
+        st.session_state["show_auth"] = False
         
         return True
     except Exception as e:
