@@ -12,6 +12,8 @@ import hashlib
 import secrets
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 import requests
 from database import (create_user, authenticate_user, get_user_subscription, 
                      update_subscription, User, Subscription, UserSettings,
@@ -138,6 +140,75 @@ def logout_user():
     st.session_state[USER_SESSION_KEY] = None
     st.session_state[AUTH_STATUS_KEY] = False
     st.session_state[AUTH_MESSAGE_KEY] = "You have been logged out."
+    
+def handle_google_identity_token(credential):
+    """
+    Handle Google Identity Services authentication
+    
+    Args:
+        credential (str): The credential (ID token) returned by Google Identity Services
+        
+    Returns:
+        bool: True if authentication was successful, False otherwise
+    """
+    try:
+        # Verify the token
+        idinfo = id_token.verify_oauth2_token(
+            credential, 
+            google_requests.Request(), 
+            GOOGLE_CLIENT_ID
+        )
+        
+        # Check issuer
+        if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
+            st.session_state[AUTH_MESSAGE_KEY] = "Invalid token issuer."
+            return False
+            
+        # Get user info
+        email = idinfo.get('email')
+        if not email:
+            st.session_state[AUTH_MESSAGE_KEY] = "No email address associated with this Google account."
+            return False
+            
+        email_verified = idinfo.get('email_verified', False)
+        if not email_verified:
+            st.session_state[AUTH_MESSAGE_KEY] = "Email address not verified by Google."
+            return False
+            
+        name = idinfo.get('name', email.split('@')[0])
+        
+        # Check if user exists
+        session = get_db_session()
+        user = session.query(User).filter_by(email=email).first()
+        
+        if not user:
+            # Create new user with random password
+            random_password = secrets.token_urlsafe(16)
+            user, error = create_user(name, email, random_password)
+            if not user:
+                st.session_state[AUTH_MESSAGE_KEY] = error or "Error creating user account. Please try again."
+                return False
+            
+        # Login user
+        st.session_state[USER_SESSION_KEY] = {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "created_at": user.created_at.isoformat() if user.created_at else None,
+            "last_login": datetime.now().isoformat(),
+            "oauth_provider": "google"
+        }
+        st.session_state[AUTH_STATUS_KEY] = True
+        st.session_state[AUTH_MESSAGE_KEY] = f"Welcome, {name}! You've successfully signed in with Google."
+        
+        return True
+    except ValueError as e:
+        # Invalid token
+        st.session_state[AUTH_MESSAGE_KEY] = f"Invalid token: {str(e)}"
+        return False
+    except Exception as e:
+        st.session_state[AUTH_MESSAGE_KEY] = f"Error during Google authentication: {str(e)}"
+        return False
     
 def init_google_oauth():
     """Initialize Google OAuth flow"""
@@ -416,19 +487,76 @@ def show_login_ui():
     st.markdown("---")
     st.subheader("Or sign in with:")
     
+    # Process Google Identity token if present in query params
+    if 'google_credential' in st.session_state:
+        credential = st.session_state.google_credential
+        if handle_google_identity_token(credential):
+            st.rerun()
+    
+    # Add Google Identity Services scripts
+    if GOOGLE_CLIENT_ID:
+        base_url = get_base_url()
+        callback_path = "/auth/google"  # New callback path specifically for Google Identity Services
+        
+        st.markdown(f"""
+        <script src="https://accounts.google.com/gsi/client" async defer></script>
+        <div id="g_id_onload"
+            data-client_id="{GOOGLE_CLIENT_ID}"
+            data-context="signin"
+            data-ux_mode="popup"
+            data-callback="handleCredentialResponse"
+            data-auto_prompt="false">
+        </div>
+        
+        <script>
+        function handleCredentialResponse(response) {{
+            // Store the credential in session state
+            const credential = response.credential;
+            // Use Streamlit's sendBackMsg to communicate with Python
+            window.parent.postMessage({{
+                type: "streamlit:setComponentValue",
+                value: credential,
+                dataType: "string",
+                key: "google_credential"
+            }}, "*");
+            
+            // Reload the page to apply the authentication
+            setTimeout(() => {{
+                window.parent.location.reload();
+            }}, 300);
+        }}
+        </script>
+        """, unsafe_allow_html=True)
+    
     social_cols = st.columns(2)
     
     with social_cols[0]:
-        if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
-            google_auth_url = init_google_oauth()
-            st.markdown(f"""
-            <a href="{google_auth_url}" target="_self">
-                <div style="background-color:#4285F4; color:white; padding:8px 16px; border-radius:4px; display:inline-flex; align-items:center; cursor:pointer;">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" style="height:24px; margin-right:8px;">
-                    Sign in with Google
-                </div>
-            </a>
+        if GOOGLE_CLIENT_ID:
+            # Google Identity Services Sign In button
+            st.markdown("""
+            <div class="g_id_signin"
+                data-type="standard"
+                data-shape="rectangular"
+                data-theme="outline"
+                data-text="signin_with"
+                data-size="large"
+                data-logo_alignment="left">
+            </div>
             """, unsafe_allow_html=True)
+            
+            # Legacy OAuth flow as fallback
+            st.markdown("---")
+            st.markdown("Or use traditional OAuth:")
+            if GOOGLE_CLIENT_SECRET:
+                google_auth_url = init_google_oauth()
+                st.markdown(f"""
+                <a href="{google_auth_url}" target="_self">
+                    <div style="background-color:#4285F4; color:white; padding:8px 16px; border-radius:4px; display:inline-flex; align-items:center; cursor:pointer;">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" style="height:24px; margin-right:8px;">
+                        Sign in with Google (OAuth)
+                    </div>
+                </a>
+                """, unsafe_allow_html=True)
         else:
             st.info("Google authentication is not configured.")
     
