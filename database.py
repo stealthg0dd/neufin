@@ -328,9 +328,10 @@ def get_cached_stock_data(ticker, time_period, max_age_hours=1):
         if time_diff.total_seconds() > (max_age_hours * 3600):
             return None
         
-        # Convert JSON string back to DataFrame
+        # Convert JSON string back to DataFrame - using StringIO to avoid deprecation warning
         import pandas as pd
-        return pd.read_json(cached_data.data_json, orient='split')
+        from io import StringIO
+        return pd.read_json(StringIO(cached_data.data_json), orient='split')
 
 def cache_ai_analysis(analysis_type, identifier, analysis_data):
     """Cache AI-generated analysis"""
@@ -416,9 +417,13 @@ def get_cached_ai_analysis(analysis_type, identifier=None, max_age_hours=24):
         time_diff = datetime.now() - cached.analysis_date
         if time_diff.total_seconds() > (max_age_hours * 3600):
             return None
-        
-        # Parse JSON string back to dict
-        return json.loads(cached.analysis_json)
+            
+        try:
+            # Parse JSON string back to dict
+            return json.loads(cached.analysis_json)
+        except Exception as e:
+            print(f"Error parsing cached AI analysis JSON: {e}")
+            return None
 
 def save_user_analysis(user_id, analysis_type, reference_id, notes=None):
     """Save analysis for a user"""

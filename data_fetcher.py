@@ -37,15 +37,29 @@ def fetch_stock_data(ticker, period='1mo', use_cache=True, exchange=None):
         # Check if we can get data from cache
         if use_cache:
             cached_data = get_cached_stock_data(ticker, period, max_age_hours=1)
-            if cached_data is not None:
+            if cached_data is not None and not cached_data.empty:
                 return cached_data
+        
+        # Ensure ticker doesn't have any invalid suffix (cleaning up any potential .NS suffix)
+        if ticker.endswith('.NS') and not ticker.startswith('^'):
+            ticker = ticker.replace('.NS', '')
+            
+        # Add more logging for debugging
+        print(f"Fetching data for ticker: {ticker}, period: {period}")
         
         # If not in cache or cache disabled, fetch from Yahoo Finance
         stock = yf.Ticker(ticker)
         data = stock.history(period=period)
         
         if data.empty:
+            print(f"Empty data returned for {ticker} (original: {original_ticker})")
             st.warning(f"No data available for {original_ticker} in the selected period.")
+            
+            # Try again with a different period to see if the ticker is valid but data is limited
+            test_data = stock.history(period="1d")
+            if not test_data.empty:
+                st.info(f"The ticker {original_ticker} exists but no data is available for the selected period. Try a shorter time period.")
+            
             return None
         
         # Cache the data for future use
@@ -54,6 +68,7 @@ def fetch_stock_data(ticker, period='1mo', use_cache=True, exchange=None):
         
         return data
     except Exception as e:
+        print(f"Exception fetching data for {ticker}: {str(e)}")
         st.error(f"Error fetching data for {ticker}: {str(e)}")
         return None
 
