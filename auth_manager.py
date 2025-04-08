@@ -61,7 +61,7 @@ def get_current_user():
 
 def login_user(email, password):
     """Login a user with email and password"""
-    user = authenticate_user(email, password)
+    user, error = authenticate_user(email, password)
     if user:
         st.session_state[USER_SESSION_KEY] = {
             "id": user.id,
@@ -74,13 +74,13 @@ def login_user(email, password):
         st.session_state[AUTH_MESSAGE_KEY] = f"Welcome back, {user.username}!"
         return True
     else:
-        st.session_state[AUTH_MESSAGE_KEY] = "Invalid email or password. Please try again."
+        st.session_state[AUTH_MESSAGE_KEY] = error or "Invalid email or password. Please try again."
         return False
 
 def register_user(username, email, password):
     """Register a new user"""
     try:
-        user = create_user(username, email, password)
+        user, error = create_user(username, email, password)
         if user:
             st.session_state[USER_SESSION_KEY] = {
                 "id": user.id,
@@ -93,7 +93,7 @@ def register_user(username, email, password):
             st.session_state[AUTH_MESSAGE_KEY] = f"Welcome to Neufin, {username}! Your account has been created."
             return True
         else:
-            st.session_state[AUTH_MESSAGE_KEY] = "Error creating user account. Please try again."
+            st.session_state[AUTH_MESSAGE_KEY] = error or "Error creating user account. Please try again."
             return False
     except Exception as e:
         st.session_state[AUTH_MESSAGE_KEY] = f"Error: {str(e)}"
@@ -189,7 +189,10 @@ def handle_facebook_callback(state, code):
         if not user:
             # Create new user with random password
             random_password = secrets.token_urlsafe(16)
-            user = create_user(name, email, random_password)
+            user, error = create_user(name, email, random_password)
+            if not user:
+                st.session_state[AUTH_MESSAGE_KEY] = error or "Error creating user account. Please try again."
+                return False
             
         # Login user
         st.session_state[USER_SESSION_KEY] = {
@@ -253,7 +256,10 @@ def handle_google_callback(state, code):
         if not user:
             # Create new user with random password
             random_password = secrets.token_urlsafe(16)
-            user = create_user(name, email, random_password)
+            user, error = create_user(name, email, random_password)
+            if not user:
+                st.session_state[AUTH_MESSAGE_KEY] = error or "Error creating user account. Please try again."
+                return False
             
         # Login user
         st.session_state[USER_SESSION_KEY] = {
