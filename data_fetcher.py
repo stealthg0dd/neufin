@@ -24,6 +24,10 @@ def format_indian_ticker(ticker):
     Returns:
         str: Formatted ticker symbol
     """
+    # Skip formatting for indices (which start with ^)
+    if ticker.startswith('^'):
+        return ticker
+        
     # If ticker already has a suffix, return as is
     if ticker.endswith(('.NS', '.BO')):
         return ticker
@@ -50,8 +54,11 @@ def fetch_stock_data(ticker, period='1mo', use_cache=True, exchange=None):
         pandas.DataFrame: DataFrame containing stock data
     """
     try:
+        # Skip formatting for indices (which start with ^)
+        if ticker.startswith('^'):
+            formatted_ticker = ticker
         # If specifically requesting Indian exchange
-        if exchange == 'NSE':
+        elif exchange == 'NSE':
             formatted_ticker = f"{ticker}.NS"
         elif exchange == 'BSE':
             formatted_ticker = f"{ticker}.BO"
