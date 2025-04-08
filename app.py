@@ -478,11 +478,11 @@ def show_upgrade_prompt(feature_name, subscription_level="premium"):
         st.warning("You need to log in first to access subscription options.")
         if st.button("Log In / Register"):
             st.session_state["show_auth"] = True
-            st.experimental_rerun()
+            st.rerun()
     else:
         if st.button("Upgrade Subscription"):
             st.session_state["show_subscription"] = True
-            st.experimental_rerun()
+            st.rerun()
 
 # Initialize page navigation
 if "current_page" not in st.session_state:
@@ -510,26 +510,25 @@ if "payment_session_id" not in st.session_state:
     st.session_state["payment_session_id"] = None
 
 # Parse URL for OAuth callbacks
-query_params = st.experimental_get_query_params()
-if "code" in query_params and "state" in query_params:
+if "code" in st.query_params and "state" in st.query_params:
     # Handle OAuth callback
-    code = query_params["code"][0]
-    state = query_params["state"][0]
+    code = st.query_params["code"]
+    state = st.query_params["state"]
     
     # Process the callback
     success = handle_google_callback(state, code)
     
     # Clear query parameters to avoid processing callback twice
-    st.experimental_set_query_params()
+    st.query_params.clear()
     
     if success:
         st.session_state["show_auth"] = False
-        st.experimental_rerun()
+        st.rerun()
         
 # Check for payment success callback
-if "session_id" in query_params and "payment_success" in st.session_state and st.session_state["payment_success"]:
-    st.session_state["payment_session_id"] = query_params["session_id"][0]
-    st.experimental_set_query_params()
+if "session_id" in st.query_params and "payment_success" in st.session_state and st.session_state["payment_success"]:
+    st.session_state["payment_session_id"] = st.query_params["session_id"]
+    st.query_params.clear()
 
 # Navigation bar - always show at the top
 def show_navigation():
@@ -552,17 +551,17 @@ def show_navigation():
             
             if user_menu == "My Profile":
                 st.session_state["show_profile"] = True
-                st.experimental_rerun()
+                st.rerun()
             elif user_menu == "Subscription":
                 st.session_state["show_subscription"] = True
-                st.experimental_rerun()
+                st.rerun()
             elif user_menu == "Logout":
                 logout_user()
-                st.experimental_rerun()
+                st.rerun()
         else:
             if st.button("Login / Signup"):
                 st.session_state["show_auth"] = True
-                st.experimental_rerun()
+                st.rerun()
     
     st.markdown("---")
 
@@ -582,7 +581,7 @@ if st.session_state["show_profile"]:
     
     if st.button("Back to Dashboard", key="back_from_profile"):
         st.session_state["show_profile"] = False
-        st.experimental_rerun()
+        st.rerun()
         
     # Don't show main content when profile UI is visible
     st.stop()
@@ -596,11 +595,11 @@ if st.session_state["show_subscription"]:
         st.error("User information not available. Please log in again.")
         if st.button("Back to Dashboard", key="back_from_sub_error"):
             st.session_state["show_subscription"] = False
-            st.experimental_rerun()
+            st.rerun()
     
     if st.button("Back to Dashboard", key="back_from_sub"):
         st.session_state["show_subscription"] = False
-        st.experimental_rerun()
+        st.rerun()
         
     # Don't show main content when subscription UI is visible
     st.stop()
@@ -616,13 +615,13 @@ if st.session_state.get("redirect_to_payment", False):
     
     if st.button("Back to Dashboard", key="back_from_payment"):
         st.session_state["redirect_to_payment"] = False
-        st.experimental_rerun()
+        st.rerun()
         
     # Don't show main content when payment UI is visible
     st.stop()
 
 # Show payment success UI if needed
-if "payment_success" in query_params:
+if "payment_success" in st.query_params:
     session_id = st.session_state.get("payment_session_id")
     show_payment_success_ui(session_id)
     
@@ -935,16 +934,16 @@ with st.sidebar:
         with col1:
             if st.button("My Profile", use_container_width=True):
                 st.session_state["show_profile"] = True
-                st.experimental_rerun()
+                st.rerun()
         with col2:
             if st.button("Subscription", use_container_width=True):
                 st.session_state["show_subscription"] = True
-                st.experimental_rerun()
+                st.rerun()
                 
         # Logout button
         if st.button("Logout", use_container_width=True):
             logout_user()
-            st.experimental_rerun()
+            st.rerun()
     else:
         st.markdown("""
         <h3 style="color: #7B68EE; text-align: center; margin-bottom: 15px;">Account Access</h3>
@@ -955,7 +954,7 @@ with st.sidebar:
         
         if st.button("Login / Sign Up", use_container_width=True):
             st.session_state["show_auth"] = True
-            st.experimental_rerun()
+            st.rerun()
     
     st.markdown('</div>', unsafe_allow_html=True)
     
