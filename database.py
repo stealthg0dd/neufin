@@ -1,6 +1,6 @@
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text, JSON
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
@@ -490,3 +490,75 @@ def update_user_settings(user_id, **kwargs):
                     
         session.commit()
         return settings
+
+def store_market_sentiment(sentiment_score, market_indices, news_sentiment=None, technical_sentiment=None):
+    """
+    Store market sentiment data for historical tracking
+    
+    Args:
+        sentiment_score (float): Overall market sentiment score
+        market_indices (str): Comma-separated list of indices used
+        news_sentiment (float, optional): News sentiment score component
+        technical_sentiment (float, optional): Technical sentiment score component
+        
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    with get_db_session() as session:
+        try:
+            # Create a new market sentiment record
+            sentiment = MarketSentiment(
+                sentiment_score=sentiment_score,
+                market_indices=market_indices,
+                news_sentiment=news_sentiment,
+                technical_sentiment=technical_sentiment
+            )
+            session.add(sentiment)
+            session.commit()
+            return True
+        except Exception as e:
+            session.rollback()
+            print(f"Error storing market sentiment: {str(e)}")
+            return False
+
+def get_historical_sentiment(days=30):
+    """
+    Get historical market sentiment data
+    
+    Args:
+        days (int): Number of days of history to retrieve
+        
+    Returns:
+        list: List of dictionaries with date and sentiment score
+    """
+    with get_db_session() as session:
+        try:
+            # Calculate date range
+            end_date = datetime.now()
+            start_date = end_date - timedelta(days=days)
+            
+            # Query for sentiment data in date range
+            sentiments = session.query(
+                MarketSentiment.date, 
+                MarketSentiment.sentiment_score,
+                MarketSentiment.news_sentiment,
+                MarketSentiment.technical_sentiment
+            ).filter(
+                MarketSentiment.date >= start_date,
+                MarketSentiment.date <= end_date
+            ).order_by(MarketSentiment.date).all()
+            
+            # Format results
+            results = [
+                {
+                    'date': s.date,
+                    'sentiment_score': s.sentiment_score,
+                    'news_sentiment': s.news_sentiment,
+                    'technical_sentiment': s.technical_sentiment
+                } for s in sentiments
+            ]
+            
+            return results
+        except Exception as e:
+            print(f"Error retrieving historical sentiment data: {str(e)}")
+            return []

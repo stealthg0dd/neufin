@@ -18,9 +18,225 @@ import json
 from data_fetcher import fetch_stock_data, fetch_market_news, fetch_sector_performance
 from sentiment_analyzer import analyze_text_sentiment, analyze_stock_sentiment, analyze_news_sentiment_batch
 from utils import format_sentiment_score, get_sentiment_color, get_market_indices, format_large_number
+from database import store_market_sentiment, get_historical_sentiment
 from investment_advisor import get_stock_recommendations, analyze_global_trade_impact, get_sector_insights
 from subscription_manager import initialize_subscription_state, show_login_form, show_subscription_options, process_payment, check_feature_access, show_upgrade_prompt, check_trial_status
 from ai_analyst import analyze_global_trade_conditions, generate_investment_thesis, generate_sector_outlook
+
+def create_animated_sentiment_trend(days=14):
+    """
+    Create an animated sentiment trend visualization using historical sentiment data.
+    
+    Args:
+        days (int): Number of days to show in the trend
+        
+    Returns:
+        plotly.graph_objects.Figure: Animated trend visualization
+    """
+    # Get historical sentiment data
+    sentiment_history = get_historical_sentiment(days)
+    
+    # If no historical data is available, create an empty chart with a message
+    if not sentiment_history:
+        fig = go.Figure()
+        fig.update_layout(
+            title="No historical sentiment data available",
+            title_font_color="#7B68EE",
+            font_color="#E0E0E0",
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            height=300
+        )
+        return fig
+    
+    # Convert list of dict to DataFrame
+    df = pd.DataFrame(sentiment_history)
+    
+    # Create a date range index to make sure we have entries for all days
+    date_range = pd.date_range(
+        start=df['date'].min(), 
+        end=df['date'].max()
+    )
+    
+    # Reindex the DataFrame and interpolate missing values
+    df.set_index('date', inplace=True)
+    df = df.reindex(date_range)
+    df.reset_index(inplace=True)
+    df.rename(columns={'index': 'date'}, inplace=True)
+    df.interpolate(method='linear', inplace=True)
+    
+    # Create animation frames
+    frames = []
+    for i in range(1, len(df) + 1):
+        subset = df.iloc[:i]
+        
+        frame = go.Frame(
+            data=[
+                go.Scatter(
+                    x=subset['date'],
+                    y=subset['sentiment_score'],
+                    mode='lines+markers',
+                    line=dict(width=3, color='#7B68EE'),
+                    marker=dict(size=8, color='#7B68EE')
+                )
+            ],
+            name=f'frame{i}'
+        )
+        frames.append(frame)
+    
+    # Create the initial figure
+    fig = go.Figure(
+        data=[
+            go.Scatter(
+                x=df['date'][:1],
+                y=df['sentiment_score'][:1],
+                mode='lines+markers',
+                line=dict(width=3, color='#7B68EE'),
+                marker=dict(size=8, color='#7B68EE'),
+                name='Market Sentiment'
+            )
+        ],
+        frames=frames
+    )
+    
+    # Add play button and slider
+    fig.update_layout(
+        title="Market Sentiment Trend (Animated)",
+        title_font_color="#7B68EE",
+        font_color="#E0E0E0",
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        height=300,
+        xaxis=dict(
+            showgrid=False,
+            showline=True,
+            linecolor='rgba(123, 104, 238, 0.2)',
+            title_font=dict(color='#E0E0E0'),
+            tickfont=dict(color='#E0E0E0')
+        ),
+        yaxis=dict(
+            showgrid=False,
+            gridcolor='rgba(123, 104, 238, 0.1)',
+            showline=True,
+            linecolor='rgba(123, 104, 238, 0.2)',
+            title="Sentiment Score",
+            range=[-1, 1],
+            title_font=dict(color='#E0E0E0'),
+            tickfont=dict(color='#E0E0E0'),
+            zeroline=True,
+            zerolinecolor='rgba(123, 104, 238, 0.2)'
+        ),
+        updatemenus=[
+            dict(
+                type="buttons",
+                showactive=False,
+                buttons=[
+                    dict(
+                        label="Play",
+                        method="animate",
+                        args=[
+                            None,
+                            dict(
+                                frame=dict(duration=200, redraw=True),
+                                fromcurrent=True,
+                                mode='immediate'
+                            )
+                        ]
+                    ),
+                    dict(
+                        label="Pause",
+                        method="animate",
+                        args=[
+                            [None],
+                            dict(
+                                frame=dict(duration=0, redraw=True),
+                                mode='immediate',
+                                transition=dict(duration=0)
+                            )
+                        ]
+                    )
+                ],
+                x=0.1,
+                y=0,
+                bgcolor="rgba(10, 10, 20, 0.8)",
+                font=dict(color="#E0E0E0")
+            )
+        ],
+        sliders=[
+            dict(
+                active=0,
+                steps=[
+                    dict(
+                        method="animate",
+                        args=[
+                            [f"frame{k+1}"],
+                            dict(
+                                frame=dict(duration=100, redraw=True),
+                                mode="immediate",
+                                transition=dict(duration=0)
+                            )
+                        ],
+                        label=df['date'].iloc[k].strftime('%b %d')
+                    )
+                    for k in range(min(len(df), 10))  # Only show 10 steps max
+                ],
+                y=0,
+                x=0.1,
+                len=0.9,
+                xanchor="left",
+                currentvalue=dict(
+                    visible=True,
+                    prefix="Date: ",
+                    font=dict(color="#E0E0E0")
+                ),
+                font=dict(color="#E0E0E0"),
+                bgcolor="rgba(10, 10, 20, 0.8)"
+            )
+        ]
+    )
+    
+    # Add annotations for sentiment trend
+    if len(df) > 1:
+        start_sentiment = df['sentiment_score'].iloc[0]
+        end_sentiment = df['sentiment_score'].iloc[-1]
+        change = end_sentiment - start_sentiment
+        change_pct = (change / abs(start_sentiment)) * 100 if start_sentiment != 0 else 0
+        
+        # Determine color and symbol based on trend
+        if change > 0:
+            trend_color = "rgba(0, 255, 0, 0.8)"  # Green
+            trend_symbol = "📈"
+            trend_text = "Improving"
+        elif change < 0:
+            trend_color = "rgba(255, 0, 0, 0.8)"  # Red
+            trend_symbol = "📉"
+            trend_text = "Declining"
+        else:
+            trend_color = "rgba(255, 255, 0, 0.8)"  # Yellow
+            trend_symbol = "➡️"
+            trend_text = "Stable"
+        
+        # Add trend annotation
+        fig.add_annotation(
+            x=df['date'].iloc[-1],
+            y=end_sentiment,
+            text=f"{trend_symbol} {trend_text} ({change_pct:.1f}%)",
+            showarrow=True,
+            arrowhead=1,
+            arrowcolor=trend_color,
+            arrowsize=1,
+            arrowwidth=2,
+            ax=-50,
+            ay=-40,
+            font=dict(color=trend_color, size=12),
+            bordercolor=trend_color,
+            borderwidth=1,
+            borderpad=4,
+            bgcolor="rgba(10, 10, 20, 0.8)",
+            opacity=0.8
+        )
+    
+    return fig
 
 # Custom CSS for enhanced futuristic Neufin design
 st.markdown("""
@@ -1316,6 +1532,62 @@ def load_dashboard():
     
     # Add spacer between cards
     st.markdown('<div style="height: 20px;"></div>', unsafe_allow_html=True)
+    
+    # Animated Sentiment Trend Chart - styled with neufin card
+    if check_feature_access('basic'):  # Make this a basic subscription feature
+        st.markdown('<div class="neufin-card">', unsafe_allow_html=True)
+        st.markdown(f'<h3 style="color: #7B68EE; margin-bottom: 15px;">Market Sentiment Trend {real_time_indicator}</h3>', unsafe_allow_html=True)
+        
+        try:
+            # Store current market sentiment in the database for historical tracking
+            # This should happen only once per day or when sentiment is recalculated
+            if 'sentiment_stored_today' not in st.session_state:
+                st.session_state.sentiment_stored_today = False
+                
+            # Check if we should store today's sentiment
+            if st.session_state.refresh_data or not st.session_state.sentiment_stored_today:
+                current_date = datetime.now().date()
+                
+                # Store market sentiment if recalculated (use latest from overall sentiment section)
+                # This assumes overall_sentiment is calculated earlier in the page
+                if 'overall_sentiment' in locals():
+                    try:
+                        # Store in database with current date
+                        store_market_sentiment(
+                            sentiment_score=overall_sentiment,
+                            market_indices=','.join(st.session_state.selected_stocks),
+                            news_sentiment=None,  # Could store news_sentiment component if available
+                            technical_sentiment=None  # Could store technical_sentiment component if available
+                        )
+                        st.session_state.sentiment_stored_today = True
+                    except Exception as e:
+                        st.error(f"Error storing market sentiment: {str(e)}")
+            
+            # Create and display animated sentiment trend visualization
+            animated_trend = create_animated_sentiment_trend(days=14)
+            st.plotly_chart(animated_trend, use_container_width=True)
+            
+            # Add informational note
+            st.info("This chart shows the sentiment trend over the past 14 days. Use the Play button to animate the trend.")
+            
+        except Exception as e:
+            st.error(f"Error generating sentiment trend: {str(e)}")
+            
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Add spacer between cards
+        st.markdown('<div style="height: 20px;"></div>', unsafe_allow_html=True)
+    else:
+        # Show upgrade prompt for non-premium users
+        st.markdown('<div class="neufin-card premium-features">', unsafe_allow_html=True)
+        show_upgrade_prompt(
+            feature_name="Historical Sentiment Trend Analysis", 
+            required_plan="basic"
+        )
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Add spacer between cards
+        st.markdown('<div style="height: 20px;"></div>', unsafe_allow_html=True)
     
     # Historical Price and Volume Charts - styled with neufin card
     st.markdown('<div class="neufin-card">', unsafe_allow_html=True)
