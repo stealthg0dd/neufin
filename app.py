@@ -204,6 +204,39 @@ st.markdown("""
     .js-plotly-plot .plotly .main-svg {
         background-color: transparent !important;
     }
+    
+    /* Real-time update styling */
+    .real-time-badge {
+        background-color: rgba(123, 104, 238, 0.2);
+        color: #7B68EE;
+        font-size: 12px;
+        padding: 4px 8px;
+        border-radius: 12px;
+        margin-left: 8px;
+        display: inline-flex;
+        align-items: center;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(123, 104, 238, 0.4);
+        }
+        70% {
+            box-shadow: 0 0 0 6px rgba(123, 104, 238, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(123, 104, 238, 0);
+        }
+    }
+    
+    /* Toast styling */
+    .stToast {
+        background-color: rgba(30, 30, 46, 0.9) !important;
+        color: #E0E0E0 !important;
+        border: 1px solid rgba(123, 104, 238, 0.3) !important;
+        border-radius: 8px !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -220,15 +253,24 @@ if 'last_update' not in st.session_state:
     st.session_state.last_update = datetime.now()
 if 'ai_analyses' not in st.session_state:
     st.session_state.ai_analyses = {}
+# Real-time update settings
+if 'auto_refresh' not in st.session_state:
+    st.session_state.auto_refresh = True
+if 'refresh_interval' not in st.session_state:
+    st.session_state.refresh_interval = 60  # seconds
+if 'last_auto_refresh' not in st.session_state:
+    st.session_state.last_auto_refresh = datetime.now()
     
 # Initialize subscription state
 initialize_subscription_state()
 check_trial_status()
 
 # Main title with futuristic styling
-st.markdown("""
+# Add real-time badge if auto-refresh is enabled
+real_time_badge = """<span class="real-time-badge">🔄 REAL-TIME</span>""" if st.session_state.auto_refresh else ""
+st.markdown(f"""
 <div class="neufin-headline">
-    <h1 class="glow-text">🔮 NEUFIN</h1>
+    <h1 class="glow-text">🔮 NEUFIN {real_time_badge}</h1>
     <h3>The Future of Financial Intelligence</h3>
     <p style="color:#CCC">Advanced AI-Powered Market Analytics Platform</p>
 </div>
@@ -309,16 +351,102 @@ with st.sidebar:
         st.session_state.time_period = time_period
         st.session_state.refresh_data = True
     
-    # Manual refresh button with custom styling
-    if st.button("Refresh Data"):
-        st.session_state.refresh_data = True
+    # Real-time data updates section
+    st.markdown('<div style="margin-top: 20px; border-top: 1px solid rgba(123, 104, 238, 0.3); padding-top: 15px;">', unsafe_allow_html=True)
+    st.markdown('<h4 style="color: #7B68EE; margin-bottom: 10px;">Real-Time Updates</h4>', unsafe_allow_html=True)
     
+    # Auto-refresh toggle
+    auto_refresh = st.toggle("Enable Real-Time Updates", 
+                             value=st.session_state.auto_refresh,
+                             help="Automatically refresh data at regular intervals")
+                             
+    # Add warning if real-time updates are disabled
+    if not auto_refresh:
+        st.markdown("""
+        <div style="background-color: rgba(255, 82, 82, 0.2); border-left: 4px solid #FF5252; padding: 10px; margin: 10px 0; border-radius: 4px;">
+            <p style="margin: 0; color: #FFF; font-size: 13px;">
+                <strong>Real-time updates disabled.</strong> The data won't update automatically.
+                Click "Refresh Now" to manually update the dashboard.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    if auto_refresh != st.session_state.auto_refresh:
+        st.session_state.auto_refresh = auto_refresh
+        st.session_state.last_auto_refresh = datetime.now()
+    
+    # Refresh interval selection (only shown if auto-refresh is enabled)
+    if st.session_state.auto_refresh:
+        refresh_interval = st.select_slider(
+            "Refresh Interval",
+            options=[30, 60, 120, 300, 600],
+            value=st.session_state.refresh_interval,
+            format_func=lambda x: f"{x} seconds" if x < 60 else f"{x//60} minute{'s' if x//60 > 1 else ''}"
+        )
+        
+        if refresh_interval != st.session_state.refresh_interval:
+            st.session_state.refresh_interval = refresh_interval
+            st.session_state.last_auto_refresh = datetime.now()
+    
+    # Manual refresh button with custom styling
+    st.markdown("""
+    <style>
+    .refresh-button {
+        background-color: rgba(123, 104, 238, 0.2);
+        color: #7B68EE;
+        padding: 8px 15px;
+        font-weight: bold;
+        border: 1px solid rgba(123, 104, 238, 0.3);
+        border-radius: 5px;
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 8px;
+        margin-bottom: 8px;
+        width: 100%;
+    }
+    .refresh-button:hover {
+        background-color: rgba(123, 104, 238, 0.4);
+        box-shadow: 0 0 10px rgba(123, 104, 238, 0.3);
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # Custom refresh button
+    if st.button("🔄 Refresh Data Now", key="manual_refresh", use_container_width=True):
+        st.session_state.refresh_data = True
+        st.session_state.last_auto_refresh = datetime.now()
+    
+    # Last updated indicator
+    if st.session_state.auto_refresh:
+        seconds_since_refresh = (datetime.now() - st.session_state.last_auto_refresh).total_seconds()
+        progress_value = min(seconds_since_refresh / st.session_state.refresh_interval, 1.0)
+        
+        # Display time until next refresh
+        seconds_until_refresh = max(st.session_state.refresh_interval - seconds_since_refresh, 0)
+        time_until_refresh = f"{int(seconds_until_refresh)}s" if seconds_until_refresh < 60 else f"{int(seconds_until_refresh/60)}m {int(seconds_until_refresh%60)}s"
+        
+        st.markdown(f"""
+        <div style="margin-top: 10px; font-size: 12px; color: #888;">
+            Next refresh in: {time_until_refresh}
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Visual progress bar for time until next refresh
+        st.progress(progress_value, "Refreshing soon...")
+    
+    # Always show last updated timestamp
     st.markdown(f"""
-    <div style="margin-top: 15px; font-size: 12px; color: #888;">
+    <div style="margin-top: 10px; font-size: 12px; color: #888;">
         Last updated: {st.session_state.last_update.strftime('%Y-%m-%d %H:%M:%S')}
     </div>
     """, unsafe_allow_html=True)
     
+    st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)  # Close the settings card
     
     # About section with futuristic design
@@ -354,7 +482,9 @@ def load_dashboard():
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        st.markdown('<h3 style="color: #7B68EE; margin-bottom: 15px;">Overall Market Sentiment</h3>', unsafe_allow_html=True)
+        # Add real-time indicator to headings if auto-refresh is enabled
+        real_time_indicator = """<span class="real-time-badge" style="font-size:10px; background-color: rgba(76, 175, 80, 0.2); color: #4CAF50; padding: 3px 6px; border-radius: 4px; margin-left: 8px; border: 1px solid rgba(76, 175, 80, 0.3);">🔄 LIVE</span>""" if st.session_state.auto_refresh else ""
+        st.markdown(f'<h3 style="color: #7B68EE; margin-bottom: 15px;">Overall Market Sentiment {real_time_indicator}</h3>', unsafe_allow_html=True)
         
         try:
             # Fetch major index data for overall market sentiment
@@ -409,7 +539,8 @@ def load_dashboard():
             st.error(f"Error analyzing market sentiment: {str(e)}")
     
     with col2:
-        st.markdown('<h3 style="color: #7B68EE; margin-bottom: 15px;">Latest News Sentiment</h3>', unsafe_allow_html=True)
+        # Add real-time indicator to news sentiment heading if auto-refresh is enabled
+        st.markdown(f'<h3 style="color: #7B68EE; margin-bottom: 15px;">Latest News Sentiment {real_time_indicator}</h3>', unsafe_allow_html=True)
         
         try:
             with st.spinner("Analyzing news sentiment..."):
@@ -451,7 +582,8 @@ def load_dashboard():
     
     # Stock-specific sentiment analysis - styled with neufin card
     st.markdown('<div class="neufin-card">', unsafe_allow_html=True)
-    st.markdown('<h3 style="color: #7B68EE; margin-bottom: 15px;">Stock Sentiment Analysis</h3>', unsafe_allow_html=True)
+    # Add real-time indicator to stock sentiment heading if auto-refresh is enabled
+    st.markdown(f'<h3 style="color: #7B68EE; margin-bottom: 15px;">Stock Sentiment Analysis {real_time_indicator}</h3>', unsafe_allow_html=True)
     
     try:
         stock_sentiments = []
@@ -529,7 +661,8 @@ def load_dashboard():
     
     # Historical Price and Volume Charts - styled with neufin card
     st.markdown('<div class="neufin-card">', unsafe_allow_html=True)
-    st.markdown('<h3 style="color: #7B68EE; margin-bottom: 15px;">Historical Price Charts</h3>', unsafe_allow_html=True)
+    # Add real-time indicator to historical price charts heading if auto-refresh is enabled
+    st.markdown(f'<h3 style="color: #7B68EE; margin-bottom: 15px;">Historical Price Charts {real_time_indicator}</h3>', unsafe_allow_html=True)
     
     try:
         # Create tabs for each stock
@@ -645,7 +778,8 @@ def load_dashboard():
     
     # Sector Performance Analysis - styled with neufin card
     st.markdown('<div class="neufin-card">', unsafe_allow_html=True)
-    st.markdown('<h3 style="color: #7B68EE; margin-bottom: 15px;">Sector Performance Analysis</h3>', unsafe_allow_html=True)
+    # Add real-time indicator to sector performance heading if auto-refresh is enabled
+    st.markdown(f'<h3 style="color: #7B68EE; margin-bottom: 15px;">Sector Performance Analysis {real_time_indicator}</h3>', unsafe_allow_html=True)
     
     try:
         with st.spinner("Analyzing sector performance..."):
@@ -747,7 +881,10 @@ def load_dashboard():
 # Add premium features - Investment recommendations in a stylish container
 st.markdown('<div style="height: 20px;"></div>', unsafe_allow_html=True)
 st.markdown('<div class="neufin-card premium-features">', unsafe_allow_html=True)
-st.markdown('<h3 style="color: #7B68EE; margin-bottom: 15px;">Premium AI-Powered Features</h3>', unsafe_allow_html=True)
+
+# Use the same real-time indicator style for Premium Features
+premium_real_time_indicator = """<span class="real-time-badge" style="font-size:10px; background-color: rgba(76, 175, 80, 0.2); color: #4CAF50; padding: 3px 6px; border-radius: 4px; margin-left: 8px; border: 1px solid rgba(76, 175, 80, 0.3);">🔄 LIVE</span>""" if st.session_state.auto_refresh else ""
+st.markdown(f'<h3 style="color: #7B68EE; margin-bottom: 15px;">Premium AI-Powered Features {premium_real_time_indicator}</h3>', unsafe_allow_html=True)
 
 # Create a custom styled tabs container
 st.markdown("""
@@ -1241,11 +1378,37 @@ with global_tab:
 # Close the premium features container
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Handle data loading
-if st.session_state.refresh_data or (datetime.now() - st.session_state.last_update > timedelta(minutes=15)):
-    load_dashboard()
+# Handle data loading with real-time updates
+if (st.session_state.auto_refresh and 
+    (datetime.now() - st.session_state.last_auto_refresh).total_seconds() >= st.session_state.refresh_interval):
+    # Automatically refresh data based on interval
+    st.session_state.refresh_data = True
+    st.session_state.last_auto_refresh = datetime.now()
+    
+    # Visual indicator for real-time refresh
+    st.toast(f"🔄 Data refreshed automatically at {datetime.now().strftime('%H:%M:%S')}", icon="🔄")
+
+if st.session_state.refresh_data:
+    with st.spinner("Refreshing data in real-time..."):
+        load_dashboard()
+        # Reset the refresh flag after loading
+        st.session_state.refresh_data = False
+        # Update the last update timestamp
+        st.session_state.last_update = datetime.now()
 else:
     load_dashboard()
+    
+# Set up automatic rerun for real-time updates if enabled
+if st.session_state.auto_refresh:
+    # Calculate time to wait before next refresh
+    seconds_since_refresh = (datetime.now() - st.session_state.last_auto_refresh).total_seconds()
+    seconds_until_refresh = max(1, min(10, st.session_state.refresh_interval - seconds_since_refresh))
+    
+    # Only rerun if we're more than 80% of the way to the next refresh
+    # This prevents too frequent reruns while still maintaining real-time updates
+    if seconds_since_refresh > (st.session_state.refresh_interval * 0.8):
+        time.sleep(1)  # Small delay to prevent excessive reruns
+        st.rerun()
 
 # Add spacer and commercial footer with Neufin branding
 st.markdown('<div style="height: 40px;"></div>', unsafe_allow_html=True)
