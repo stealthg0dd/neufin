@@ -1,4 +1,12 @@
 import streamlit as st
+
+# Page configuration - must be the first Streamlit command
+st.set_page_config(
+    page_title="Neufin",
+    page_icon="🔮",
+    layout="wide",
+)
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -14,12 +22,192 @@ from investment_advisor import get_stock_recommendations, analyze_global_trade_i
 from subscription_manager import initialize_subscription_state, show_login_form, show_subscription_options, process_payment, check_feature_access, show_upgrade_prompt, check_trial_status
 from ai_analyst import analyze_global_trade_conditions, generate_investment_thesis, generate_sector_outlook
 
-# Page configuration
-st.set_page_config(
-    page_title="Market Sentinel Pro",
-    page_icon="📈",
-    layout="wide",
-)
+# Custom CSS for enhanced futuristic Neufin design
+st.markdown("""
+<style>
+    /* Base Styling */
+    .stApp {
+        background-color: #121212;
+        background-image: radial-gradient(circle at top right, rgba(123, 104, 238, 0.1), transparent 400px);
+    }
+    h1, h2, h3, h4, h5, h6 {
+        color: #E0E0E0;
+        font-family: 'Helvetica Neue', sans-serif;
+        font-weight: 600;
+    }
+    p {
+        color: #CCCCCC;
+    }
+    
+    /* Custom Card Styling */
+    .neufin-card {
+        background: linear-gradient(to bottom right, rgba(30, 30, 46, 0.8), rgba(17, 17, 17, 0.9));
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid rgba(123, 104, 238, 0.3);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        margin-bottom: 20px;
+        backdrop-filter: blur(10px);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .neufin-card:hover {
+        box-shadow: 0 6px 24px rgba(123, 104, 238, 0.2);
+    }
+    
+    .premium-features {
+        background: linear-gradient(135deg, rgba(30, 30, 46, 0.9) 0%, rgba(20, 20, 35, 0.9) 100%);
+        border-top: 1px solid rgba(123, 104, 238, 0.3);
+        border-left: 1px solid rgba(123, 104, 238, 0.3);
+    }
+    
+    .neufin-headline {
+        background: linear-gradient(90deg, #7B68EE, #3A3A80);
+        color: white;
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .neufin-headline:before {
+        content: "";
+        position: absolute;
+        top: -10px;
+        left: -10px;
+        right: -10px;
+        bottom: -10px;
+        background: linear-gradient(45deg, rgba(123, 104, 238, 0.2), transparent, rgba(123, 104, 238, 0.2));
+        z-index: -1;
+        filter: blur(20px);
+    }
+    
+    .glow-text {
+        text-shadow: 0 0 10px rgba(123, 104, 238, 0.7);
+    }
+    
+    /* Data metrics styling */
+    .data-metric {
+        background: rgba(30, 30, 46, 0.8);
+        border-radius: 8px;
+        padding: 15px;
+        border-left: 3px solid #7B68EE;
+        transition: transform 0.2s;
+    }
+    
+    .data-metric:hover {
+        transform: translateY(-2px);
+    }
+    
+    .data-metric-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #E0E0E0;
+    }
+    
+    .data-metric-label {
+        font-size: 14px;
+        color: #AAAAAA;
+        margin-top: 3px;
+    }
+    
+    /* Sidebar styling */
+    .css-1cypcdb, .css-d1kyf5, .css-z5fcl4 {
+        background-color: #1A1A2E !important;
+    }
+    
+    /* Button styling */
+    .stButton > button {
+        background: linear-gradient(90deg, #7B68EE, #5D4DC4);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 15px;
+        transition: all 0.3s;
+    }
+    
+    .stButton > button:hover {
+        background: linear-gradient(90deg, #9281F1, #7B68EE);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(123, 104, 238, 0.4);
+    }
+    
+    /* Feature pills in the footer */
+    .feature-pill {
+        text-align: center;
+        padding: 10px 15px;
+        background-color: rgba(123, 104, 238, 0.2);
+        border-radius: 50px;
+        display: flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+    
+    .feature-pill:hover {
+        background-color: rgba(123, 104, 238, 0.4);
+        transform: translateY(-2px);
+    }
+    
+    .feature-icon {
+        margin-right: 8px;
+        font-size: 18px;
+    }
+    
+    .feature-text {
+        color: #e0e0e0;
+        font-weight: 500;
+    }
+    
+    /* Table styling */
+    .dataframe {
+        border: none !important;
+    }
+    
+    .dataframe th {
+        background-color: rgba(30, 30, 46, 0.8) !important;
+        color: #7B68EE !important;
+        font-weight: 600 !important;
+        border-bottom: 1px solid rgba(123, 104, 238, 0.2) !important;
+        text-align: left !important;
+        padding: 8px 12px !important;
+    }
+    
+    .dataframe td {
+        background-color: rgba(20, 20, 30, 0.6) !important;
+        color: #E0E0E0 !important;
+        border: none !important;
+        padding: 8px 12px !important;
+    }
+    
+    /* Tabs styling */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 2px;
+        background-color: transparent;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        background-color: rgba(30, 30, 46, 0.4);
+        border-radius: 4px 4px 0 0;
+        color: #AAAAAA;
+        padding: 8px 16px;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background-color: rgba(123, 104, 238, 0.2);
+        color: #7B68EE;
+        border-bottom: 2px solid #7B68EE;
+    }
+    
+    /* Chart background */
+    .js-plotly-plot .plotly .main-svg {
+        background-color: transparent !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# Page configuration already set at the top of the file
 
 # Initialize session state variables
 if 'selected_stocks' not in st.session_state:
@@ -37,39 +225,65 @@ if 'ai_analyses' not in st.session_state:
 initialize_subscription_state()
 check_trial_status()
 
-# Main title with branded styling
+# Main title with futuristic styling
 st.markdown("""
-<div style="background-color:#1E88E5; padding:10px; border-radius:10px; margin-bottom:10px;">
-  <h1 style="color:white; text-align:center;">📊 Market Sentinel Pro</h1>
-  <h3 style="color:white; text-align:center;">AI-Powered Market Intelligence Platform</h3>
+<div class="neufin-headline">
+    <h1 class="glow-text">🔮 NEUFIN</h1>
+    <h3>The Future of Financial Intelligence</h3>
+    <p style="color:#CCC">Advanced AI-Powered Market Analytics Platform</p>
 </div>
 """, unsafe_allow_html=True)
 
-# Introduction with value proposition
+# Introduction with futuristic design
 st.markdown("""
-<div style="background-color:#f8f8f8; padding:15px; border-radius:5px; margin-bottom:20px;">
-This platform delivers AI-powered market sentiment analysis using real-time financial data. 
-Our advanced algorithms analyze technical indicators, news sentiment, and global trade impacts 
-to provide actionable investment insights.
+<div class="neufin-card">
+    <p style="font-size:18px; margin-bottom:20px;">
+        <span style="color:#7B68EE; font-weight:bold;">Welcome to Neufin</span> - Where AI meets Finance.
+    </p>
+    <p>
+        Our cutting-edge neural networks continuously analyze market data, global news, and trading patterns to deliver 
+        predictive insights with unprecedented accuracy. Navigate the complexities of today's markets with 
+        our advanced toolset designed for the modern investor.
+    </p>
 </div>
 """, unsafe_allow_html=True)
 
 # Sidebar for filters, inputs, and account features
 with st.sidebar:
-    # Logo and brand
-    st.image("https://raw.githubusercontent.com/streamlit/streamlit/develop/docs/_static/streamlit-mark-color.png", width=100)
-    st.header("Market Sentinel Pro")
+    # Custom Neufin logo and brand
+    from pathlib import Path
+    logo_path = Path("neufin-icon.svg")
+    if logo_path.exists():
+        st.image("neufin-icon.svg", width=100)
+    else:
+        st.markdown("""
+        <div style="text-align: center; margin-bottom: 5px;">
+            <h1 style="color: #7B68EE; font-weight: 700;">🔮</h1>
+        </div>
+        """, unsafe_allow_html=True)
     
+    st.markdown("""
+    <div style="text-align: center; margin-bottom: 20px;">
+        <h2 style="color: #7B68EE; font-weight: 700;">NEUFIN</h2>
+        <p style="color: #AAA; font-size: 12px; margin-top: -10px;">FINANCIAL INTELLIGENCE</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Custom styled login container
+    st.markdown('<div class="neufin-card" style="padding: 15px; margin-bottom: 20px;">', unsafe_allow_html=True)
     # Add login/subscription management
     show_login_form()
+    st.markdown('</div>', unsafe_allow_html=True)
     
-    # Show subscription options if logged in
+    # Show subscription options if logged in with custom styling
     if st.session_state.user_logged_in:
+        st.markdown('<div class="neufin-card" style="padding: 15px; margin-bottom: 20px;">', unsafe_allow_html=True)
         show_subscription_options()
         process_payment()
+        st.markdown('</div>', unsafe_allow_html=True)
     
-    st.markdown("---")
-    st.header("Dashboard Settings")
+    st.markdown('<div class="neufin-card" style="padding: 15px; margin-bottom: 20px;">', unsafe_allow_html=True)
+    st.markdown('<h3 style="color: #7B68EE; margin-bottom: 15px;">Dashboard Settings</h3>', unsafe_allow_html=True)
     
     # Stock selection
     available_stocks = get_market_indices() + ['AAPL', 'MSFT', 'AMZN', 'GOOGL', 'META', 'TSLA', 'NFLX', 'DIS', 
@@ -95,33 +309,52 @@ with st.sidebar:
         st.session_state.time_period = time_period
         st.session_state.refresh_data = True
     
-    # Manual refresh button
+    # Manual refresh button with custom styling
     if st.button("Refresh Data"):
         st.session_state.refresh_data = True
     
-    st.info(f"Last updated: {st.session_state.last_update.strftime('%Y-%m-%d %H:%M:%S')}")
+    st.markdown(f"""
+    <div style="margin-top: 15px; font-size: 12px; color: #888;">
+        Last updated: {st.session_state.last_update.strftime('%Y-%m-%d %H:%M:%S')}
+    </div>
+    """, unsafe_allow_html=True)
     
-    st.markdown("---")
-    st.markdown("### About")
+    st.markdown('</div>', unsafe_allow_html=True)  # Close the settings card
+    
+    # About section with futuristic design
+    st.markdown('<div class="neufin-card" style="padding: 15px; margin-top: 20px;">', unsafe_allow_html=True)
+    st.markdown('<h3 style="color: #7B68EE; margin-bottom: 15px;">About Neufin</h3>', unsafe_allow_html=True)
     st.markdown("""
-    This platform uses advanced AI and natural language processing to analyze financial news 
-    and market data from Yahoo Finance. The sentiment scores range from -1 (extremely 
-    negative) to +1 (extremely positive).
+    <p style="font-size: 14px; margin-bottom: 10px;">
+    Neufin leverages quantum-inspired algorithms and neural networks to analyze financial markets 
+    in real-time. Our sentiment analysis ranges from -1 (bearish) to +1 (bullish).
+    </p>
     
-    **Premium features** include AI-generated investment recommendations, global trade impact analysis,
-    and detailed sector insights.
-    """)
+    <div style="margin-top: 15px; border-left: 3px solid #7B68EE; padding-left: 10px;">
+        <p style="font-size: 13px; color: #AAA;">
+        <strong style="color: #7B68EE;">Premium Features:</strong><br>
+        • AI-generated investment recommendations<br>
+        • Global trade impact analysis<br>
+        • Detailed sector forecasting<br>
+        • Personalized portfolio insights
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# Main content
+# Main content area with futuristic styling
 def load_dashboard():
     if not st.session_state.selected_stocks:
         st.warning("Please select at least one stock or index to analyze.")
         return
     
+    # Overall Market Sentiment Card
+    st.markdown('<div class="neufin-card">', unsafe_allow_html=True)
+    
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        st.subheader("Overall Market Sentiment")
+        st.markdown('<h3 style="color: #7B68EE; margin-bottom: 15px;">Overall Market Sentiment</h3>', unsafe_allow_html=True)
         
         try:
             # Fetch major index data for overall market sentiment
@@ -176,7 +409,7 @@ def load_dashboard():
             st.error(f"Error analyzing market sentiment: {str(e)}")
     
     with col2:
-        st.subheader("Latest Market News Sentiment")
+        st.markdown('<h3 style="color: #7B68EE; margin-bottom: 15px;">Latest News Sentiment</h3>', unsafe_allow_html=True)
         
         try:
             with st.spinner("Analyzing news sentiment..."):
@@ -192,9 +425,17 @@ def load_dashboard():
                         sentiment_color = get_sentiment_color(sentiment_score)
                         
                         st.markdown(f"""
-                        <div style='border-left: 5px solid {sentiment_color}; padding-left: 10px; margin-bottom: 10px;'>
-                            <h4>{title}</h4>
-                            <p>Sentiment: {sentiment_text} ({sentiment_score:.2f})</p>
+                        <div style='background: rgba(30, 30, 46, 0.6); 
+                                    border-left: 3px solid {sentiment_color}; 
+                                    padding: 10px; 
+                                    border-radius: 5px; 
+                                    margin-bottom: 10px;'>
+                            <h4 style="margin-top: 0;">{title}</h4>
+                            <div style="display: flex; align-items: center;">
+                                <div style="width: 12px; height: 12px; border-radius: 50%; 
+                                            background-color: {sentiment_color}; margin-right: 8px;"></div>
+                                <p style="margin: 0;">{sentiment_text} ({sentiment_score:.2f})</p>
+                            </div>
                         </div>
                         """, unsafe_allow_html=True)
                 else:
@@ -202,10 +443,15 @@ def load_dashboard():
         except Exception as e:
             st.error(f"Error analyzing news sentiment: {str(e)}")
     
-    st.markdown("---")
+    # Close the market sentiment card
+    st.markdown('</div>', unsafe_allow_html=True)
     
-    # Stock-specific sentiment analysis
-    st.subheader("Stock-Specific Sentiment Analysis")
+    # Add spacer between cards
+    st.markdown('<div style="height: 20px;"></div>', unsafe_allow_html=True)
+    
+    # Stock-specific sentiment analysis - styled with neufin card
+    st.markdown('<div class="neufin-card">', unsafe_allow_html=True)
+    st.markdown('<h3 style="color: #7B68EE; margin-bottom: 15px;">Stock Sentiment Analysis</h3>', unsafe_allow_html=True)
     
     try:
         stock_sentiments = []
@@ -229,94 +475,177 @@ def load_dashboard():
                 col1, col2 = st.columns([3, 2])
                 
                 with col1:
-                    # Bar chart for sentiment comparison
+                    # Bar chart for sentiment comparison with dark theme
                     fig = px.bar(
                         sentiment_df,
                         x='Symbol',
                         y='Sentiment Score',
                         color='Sentiment Score',
-                        color_continuous_scale=["red", "orange", "green"],
+                        color_continuous_scale=["#FF5252", "#FFC107", "#4CAF50"],
                         range_color=[-1, 1],
                         title="Sentiment Score by Stock"
                     )
-                    fig.update_layout(height=400)
+                    
+                    # Update layout with dark theme
+                    fig.update_layout(
+                        height=400,
+                        paper_bgcolor="rgba(0,0,0,0)",
+                        plot_bgcolor="rgba(30,30,46,0.3)",
+                        font=dict(color="#E0E0E0"),
+                        title_font_color="#7B68EE",
+                        xaxis=dict(
+                            gridcolor="rgba(123,104,238,0.15)",
+                            zerolinecolor="rgba(123,104,238,0.15)"
+                        ),
+                        yaxis=dict(
+                            gridcolor="rgba(123,104,238,0.15)",
+                            zerolinecolor="rgba(123,104,238,0.15)"
+                        )
+                    )
                     st.plotly_chart(fig, use_container_width=True)
                 
                 with col2:
+                    # Enhanced styling for dataframe
+                    st.markdown('<div class="data-metric">', unsafe_allow_html=True)
+                    st.markdown('<h4 style="color: #7B68EE; margin-top: 0;">Stock Sentiment Scores</h4>', unsafe_allow_html=True)
+                    
                     # Table of sentiment scores
                     st.dataframe(
                         sentiment_df.style.applymap(
-                            lambda x: f"background-color: {get_sentiment_color(x)}" if isinstance(x, float) else "",
+                            lambda x: f"background-color: {get_sentiment_color(x)}; color: white; font-weight: bold;" if isinstance(x, float) else "",
                             subset=['Sentiment Score']
                         ),
                         use_container_width=True
                     )
+                    st.markdown('</div>', unsafe_allow_html=True)
     except Exception as e:
         st.error(f"Error analyzing stock sentiment: {str(e)}")
     
-    st.markdown("---")
+    # Close the stock sentiment card
+    st.markdown('</div>', unsafe_allow_html=True)
     
-    # Historical Price and Volume Charts
-    st.subheader("Historical Price & Volume Charts")
+    # Add spacer between cards
+    st.markdown('<div style="height: 20px;"></div>', unsafe_allow_html=True)
+    
+    # Historical Price and Volume Charts - styled with neufin card
+    st.markdown('<div class="neufin-card">', unsafe_allow_html=True)
+    st.markdown('<h3 style="color: #7B68EE; margin-bottom: 15px;">Historical Price Charts</h3>', unsafe_allow_html=True)
     
     try:
-        for stock in st.session_state.selected_stocks[:4]:  # Limit to first 4 stocks to avoid clutter
-            with st.spinner(f"Loading {stock} data..."):
-                stock_data = fetch_stock_data(stock, st.session_state.time_period)
-                
-                if stock_data is not None and not stock_data.empty:
-                    # Create figure with secondary y-axis
-                    fig = go.Figure()
-                    
-                    # Add price line
-                    fig.add_trace(go.Scatter(
-                        x=stock_data.index,
-                        y=stock_data['Close'],
-                        name='Close Price',
-                        line=dict(color='blue')
-                    ))
-                    
-                    # Add volume as bar chart on secondary y-axis
-                    fig.add_trace(go.Bar(
-                        x=stock_data.index,
-                        y=stock_data['Volume'],
-                        name='Volume',
-                        yaxis='y2',
-                        opacity=0.3,
-                        marker=dict(color='gray')
-                    ))
-                    
-                    # Set titles and layout
-                    fig.update_layout(
-                        title=f"{stock} - Price and Volume",
-                        xaxis_title="Date",
-                        yaxis_title="Price",
-                        yaxis2=dict(
-                            title="Volume",
-                            overlaying="y",
-                            side="right",
-                            showgrid=False
-                        ),
-                        legend=dict(
-                            orientation="h",
-                            yanchor="bottom",
-                            y=1.02,
-                            xanchor="right",
-                            x=1
-                        ),
-                        height=400
-                    )
-                    
-                    st.plotly_chart(fig, use_container_width=True)
-                else:
-                    st.error(f"Could not fetch data for {stock}")
+        # Create tabs for each stock
+        if len(st.session_state.selected_stocks) > 0:
+            stock_tabs = st.tabs([f"{stock}" for stock in st.session_state.selected_stocks[:4]])
+            
+            for i, stock in enumerate(st.session_state.selected_stocks[:4]):  # Limit to first 4 stocks to avoid clutter
+                with stock_tabs[i]:
+                    with st.spinner(f"Loading {stock} data..."):
+                        stock_data = fetch_stock_data(stock, st.session_state.time_period)
+                        
+                        if stock_data is not None and not stock_data.empty:
+                            # Create figure with secondary y-axis
+                            fig = go.Figure()
+                            
+                            # Calculate the price change color
+                            price_change = stock_data['Close'].iloc[-1] - stock_data['Close'].iloc[0]
+                            price_color = "#4CAF50" if price_change >= 0 else "#FF5252"
+                            
+                            # Add price line with dynamic color
+                            fig.add_trace(go.Scatter(
+                                x=stock_data.index,
+                                y=stock_data['Close'],
+                                name='Close Price',
+                                line=dict(color=price_color, width=2)
+                            ))
+                            
+                            # Add volume as bar chart on secondary y-axis
+                            fig.add_trace(go.Bar(
+                                x=stock_data.index,
+                                y=stock_data['Volume'],
+                                name='Volume',
+                                yaxis='y2',
+                                opacity=0.3,
+                                marker=dict(color="#7B68EE", opacity=0.3)
+                            ))
+                            
+                            # Set titles and layout with dark theme
+                            fig.update_layout(
+                                title=f"{stock} - Price and Volume",
+                                xaxis_title="Date",
+                                yaxis_title="Price",
+                                paper_bgcolor="rgba(0,0,0,0)",
+                                plot_bgcolor="rgba(30,30,46,0.3)",
+                                font=dict(color="#E0E0E0"),
+                                title_font_color="#7B68EE",
+                                xaxis=dict(
+                                    gridcolor="rgba(123,104,238,0.15)",
+                                    zerolinecolor="rgba(123,104,238,0.15)"
+                                ),
+                                yaxis=dict(
+                                    gridcolor="rgba(123,104,238,0.15)",
+                                    zerolinecolor="rgba(123,104,238,0.15)"
+                                ),
+                                yaxis2=dict(
+                                    title="Volume",
+                                    overlaying="y",
+                                    side="right",
+                                    showgrid=False,
+                                    gridcolor="rgba(123,104,238,0.15)",
+                                    zerolinecolor="rgba(123,104,238,0.15)"
+                                ),
+                                legend=dict(
+                                    orientation="h",
+                                    yanchor="bottom",
+                                    y=1.02,
+                                    xanchor="right",
+                                    x=1,
+                                    bgcolor="rgba(30,30,46,0.5)",
+                                    bordercolor="rgba(123,104,238,0.5)"
+                                ),
+                                height=400
+                            )
+                            
+                            # Add price info in a box
+                            start_price = stock_data['Close'].iloc[0]
+                            end_price = stock_data['Close'].iloc[-1]
+                            pct_change = ((end_price - start_price) / start_price) * 100
+                            
+                            # Add price metrics in a stylish box at top
+                            st.markdown(f"""
+                            <div style="display: flex; gap: 20px; margin-bottom: 15px;">
+                                <div class="data-metric">
+                                    <div class="data-metric-value">${end_price:.2f}</div>
+                                    <div class="data-metric-label">Current Price</div>
+                                </div>
+                                <div class="data-metric">
+                                    <div class="data-metric-value" style="color: {'#4CAF50' if pct_change >= 0 else '#FF5252'}">
+                                        {'+' if pct_change >= 0 else ''}{pct_change:.2f}%
+                                    </div>
+                                    <div class="data-metric-label">Period Change</div>
+                                </div>
+                                <div class="data-metric">
+                                    <div class="data-metric-value">${stock_data['Volume'].iloc[-1]//1000000}M</div>
+                                    <div class="data-metric-label">Latest Volume</div>
+                                </div>
+                            </div>
+                            """, unsafe_allow_html=True)
+                            
+                            st.plotly_chart(fig, use_container_width=True)
+                        else:
+                            st.error(f"Could not fetch data for {stock}")
+        else:
+            st.info("Select stocks from the sidebar to view their historical price charts.")
     except Exception as e:
         st.error(f"Error loading historical charts: {str(e)}")
     
-    st.markdown("---")
+    # Close the historical price card
+    st.markdown('</div>', unsafe_allow_html=True)
     
-    # Sector Performance Analysis
-    st.subheader("Sector Performance & Sentiment")
+    # Add spacer between cards
+    st.markdown('<div style="height: 20px;"></div>', unsafe_allow_html=True)
+    
+    # Sector Performance Analysis - styled with neufin card
+    st.markdown('<div class="neufin-card">', unsafe_allow_html=True)
+    st.markdown('<h3 style="color: #7B68EE; margin-bottom: 15px;">Sector Performance Analysis</h3>', unsafe_allow_html=True)
     
     try:
         with st.spinner("Analyzing sector performance..."):
@@ -333,45 +662,155 @@ def load_dashboard():
                 # Sort by performance
                 sectors_df = sectors_df.sort_values(by='Performance', ascending=False)
                 
-                # Create sector performance chart
+                # Show top performing sector in a highlight box
+                top_sector = sectors_df.iloc[0]
+                worst_sector = sectors_df.iloc[-1]
+                
+                # Metrics display for top and bottom sectors
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.markdown(f"""
+                    <div class="data-metric" style="border-left-color: #4CAF50;">
+                        <h4 style="color: #4CAF50; margin-top: 0; margin-bottom: 10px;">Top Performing Sector</h4>
+                        <div class="data-metric-value" style="font-size: 28px;">{top_sector['Sector']}</div>
+                        <div style="color: #4CAF50; font-size: 20px; font-weight: bold; margin-top: 5px;">+{top_sector['Performance']:.2f}%</div>
+                        <div class="data-metric-label">Sentiment: {top_sector['Sentiment']}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                with col2:
+                    st.markdown(f"""
+                    <div class="data-metric" style="border-left-color: #FF5252;">
+                        <h4 style="color: #FF5252; margin-top: 0; margin-bottom: 10px;">Weakest Performing Sector</h4>
+                        <div class="data-metric-value" style="font-size: 28px;">{worst_sector['Sector']}</div>
+                        <div style="color: #FF5252; font-size: 20px; font-weight: bold; margin-top: 5px;">{worst_sector['Performance']:.2f}%</div>
+                        <div class="data-metric-label">Sentiment: {worst_sector['Sentiment']}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # Create sector performance chart with dark theme
                 fig = px.bar(
                     sectors_df,
                     x='Sector',
                     y='Performance',
                     color='Performance',
-                    color_continuous_scale=["red", "orange", "green"],
+                    color_continuous_scale=["#FF5252", "#FFC107", "#4CAF50"],
                     range_color=[-3, 3],  # Assumes performance is in percent
                     title="Sector Performance (%)"
                 )
-                fig.update_layout(height=500)
+                
+                # Update layout with dark theme
+                fig.update_layout(
+                    height=500,
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(30,30,46,0.3)",
+                    font=dict(color="#E0E0E0"),
+                    title_font_color="#7B68EE",
+                    xaxis=dict(
+                        gridcolor="rgba(123,104,238,0.15)",
+                        zerolinecolor="rgba(123,104,238,0.15)"
+                    ),
+                    yaxis=dict(
+                        gridcolor="rgba(123,104,238,0.15)",
+                        zerolinecolor="rgba(123,104,238,0.15)"
+                    )
+                )
                 st.plotly_chart(fig, use_container_width=True)
                 
-                # Display sector table
+                # Display sector table with enhanced styling
+                st.markdown('<div class="data-metric" style="padding: 15px;">', unsafe_allow_html=True)
+                st.markdown('<h4 style="color: #7B68EE; margin-top: 0; margin-bottom: 15px;">Sector Performance Details</h4>', unsafe_allow_html=True)
                 st.dataframe(
                     sectors_df[['Sector', 'Performance', 'Sentiment', 'Sentiment Score']].style.format({
                         'Performance': '{:.2f}%',
                         'Sentiment Score': '{:.2f}'
                     }).applymap(
-                        lambda x: f"background-color: {get_sentiment_color(x)}" if isinstance(x, float) else "",
+                        lambda x: f"background-color: {get_sentiment_color(x)}; color: white; font-weight: bold;" if isinstance(x, float) else "",
                         subset=['Sentiment Score']
                     ),
                     use_container_width=True
                 )
+                st.markdown('</div>', unsafe_allow_html=True)
             else:
                 st.info("No sector performance data available.")
     except Exception as e:
         st.error(f"Error analyzing sector performance: {str(e)}")
     
+    # Close the sector performance card
+    st.markdown('</div>', unsafe_allow_html=True)
+    
     # Update last refresh time
     st.session_state.last_update = datetime.now()
     st.session_state.refresh_data = False
 
-# Add premium features - Investment recommendations
-st.markdown("---")
+# Add premium features - Investment recommendations in a stylish container
+st.markdown('<div style="height: 20px;"></div>', unsafe_allow_html=True)
+st.markdown('<div class="neufin-card premium-features">', unsafe_allow_html=True)
+st.markdown('<h3 style="color: #7B68EE; margin-bottom: 15px;">Premium AI-Powered Features</h3>', unsafe_allow_html=True)
+
+# Create a custom styled tabs container
+st.markdown("""
+<div class="custom-tabs">
+    <div class="tabs-header">
+        <button class="tab-button active" onclick="activateTab(event, 'tab-recommendations')">Investment Recommendations</button>
+        <button class="tab-button" onclick="activateTab(event, 'tab-sectors')">Sector Insights</button>
+        <button class="tab-button" onclick="activateTab(event, 'tab-global')">Global Trade Analysis</button>
+    </div>
+</div>
+
+<style>
+.custom-tabs {
+    margin-bottom: 20px;
+}
+.tabs-header {
+    display: flex;
+    border-bottom: 1px solid rgba(123,104,238,0.5);
+    margin-bottom: 20px;
+}
+.tab-button {
+    background: none;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    color: #E0E0E0;
+    font-weight: bold;
+    position: relative;
+}
+.tab-button:hover {
+    color: #7B68EE;
+}
+.tab-button.active {
+    color: #7B68EE;
+}
+.tab-button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: #7B68EE;
+}
+</style>
+
+<script>
+function activateTab(evt, tabId) {
+    // This is just for show - Streamlit will handle the actual tab switching
+    // But this could work with additional JavaScript if needed in the future
+    var tabButtons = document.getElementsByClassName("tab-button");
+    for (var i = 0; i < tabButtons.length; i++) {
+        tabButtons[i].className = tabButtons[i].className.replace(" active", "");
+    }
+    evt.currentTarget.className += " active";
+}
+</script>
+""", unsafe_allow_html=True)
+
 recommendation_tab, sector_tab, global_tab = st.tabs(["Investment Recommendations", "Sector Insights", "Global Trade Analysis"])
 
 with recommendation_tab:
-    st.subheader("🌟 AI-Powered Investment Recommendations")
+    st.markdown('<h3 style="color: #7B68EE;">AI-Powered Investment Recommendations</h3>', unsafe_allow_html=True)
     
     # Check if user has access to premium features
     if check_feature_access('basic'):
@@ -512,7 +951,7 @@ with recommendation_tab:
         show_upgrade_prompt("AI-Powered Investment Recommendations", "basic")
 
 with sector_tab:
-    st.subheader("🔍 Detailed Sector Insights")
+    st.markdown('<h3 style="color: #7B68EE;">Detailed Sector Insights</h3>', unsafe_allow_html=True)
     
     # Check if user has access to premium features
     if check_feature_access('basic'):
@@ -677,7 +1116,7 @@ with sector_tab:
         show_upgrade_prompt("Detailed Sector Insights", "basic")
 
 with global_tab:
-    st.subheader("🌎 Global Trade Impact Analysis")
+    st.markdown('<h3 style="color: #7B68EE;">Global Trade Impact Analysis</h3>', unsafe_allow_html=True)
     
     # Check if user has access to premium features
     if check_feature_access('premium'):
@@ -799,36 +1238,82 @@ with global_tab:
         # Show upgrade message for premium feature
         show_upgrade_prompt("Global Trade Impact Analysis", "premium")
 
+# Close the premium features container
+st.markdown('</div>', unsafe_allow_html=True)
+
 # Handle data loading
 if st.session_state.refresh_data or (datetime.now() - st.session_state.last_update > timedelta(minutes=15)):
     load_dashboard()
 else:
     load_dashboard()
 
-# Add commercial info and footer
-st.markdown("---")
+# Add spacer and commercial footer with Neufin branding
+st.markdown('<div style="height: 40px;"></div>', unsafe_allow_html=True)
 
-# Commercial footer
+# Commercial footer with futuristic dark theme
 st.markdown("""
-<div style='background-color:#f8f8f8; padding:20px; border-radius:5px;'>
-<h3 style='text-align:center;'>Market Sentinel Pro - Your AI-Powered Investment Platform</h3>
-<p style='text-align:center;'>
-Subscribe to our Premium Plan for advanced market insights, personalized stock recommendations, and global trade impact analysis.
-</p>
-<div style='display:flex; justify-content:center; gap:10px;'>
-<div style='text-align:center; padding:10px; background-color:#1E88E520; border-radius:5px;'>🚀 AI-Powered Analysis</div>
-<div style='text-align:center; padding:10px; background-color:#1E88E520; border-radius:5px;'>💰 Investment Recommendations</div>
-<div style='text-align:center; padding:10px; background-color:#1E88E520; border-radius:5px;'>📊 Sector Insights</div>
-<div style='text-align:center; padding:10px; background-color:#1E88E520; border-radius:5px;'>🌎 Global Trade Impact</div>
+<div class="neufin-card premium-features">
+    <h3 style="text-align:center; color: #7B68EE; margin-bottom: 20px;">Neufin - AI-Powered Financial Intelligence</h3>
+    <p style="text-align:center; color: #e0e0e0;">
+        Unlock the power of AI-driven market analysis. Subscribe to our Premium Plan for advanced insights, personalized recommendations, and global trade impact analysis.
+    </p>
+    <div style="display:flex; justify-content:center; gap:15px; flex-wrap: wrap; margin-top: 25px;">
+        <div class="feature-pill">
+            <div class="feature-icon">🚀</div>
+            <div class="feature-text">AI Analysis</div>
+        </div>
+        <div class="feature-pill">
+            <div class="feature-icon">💰</div>
+            <div class="feature-text">Investment Recommendations</div>
+        </div>
+        <div class="feature-pill">
+            <div class="feature-icon">📊</div>
+            <div class="feature-text">Sector Insights</div>
+        </div>
+        <div class="feature-pill">
+            <div class="feature-icon">🌎</div>
+            <div class="feature-text">Global Trade Impact</div>
+        </div>
+    </div>
 </div>
-</div>
+
+<style>
+.feature-pill {
+    text-align: center;
+    padding: 10px 15px;
+    background-color: rgba(123, 104, 238, 0.2);
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.feature-pill:hover {
+    background-color: rgba(123, 104, 238, 0.4);
+    transform: translateY(-2px);
+}
+
+.feature-icon {
+    margin-right: 8px;
+    font-size: 18px;
+}
+
+.feature-text {
+    color: #e0e0e0;
+    font-weight: 500;
+}
+</style>
 """, unsafe_allow_html=True)
 
-# Disclaimer footer
+# Disclaimer footer with Neufin branding
 st.markdown("""
-<div style='font-size:0.8em; color:#666; text-align:center; margin-top:20px;'>
-<p>**Note**: All sentiment analysis and recommendations are powered by AI and should be used for informational purposes only.
-Market Sentinel Pro does not provide financial advice. Investment decisions should be made in consultation with financial professionals.</p>
-<p>Data source: Yahoo Finance. Last updated: {}</p>
+<div style="font-size:0.8em; color:#999; text-align:center; margin-top:30px; padding: 0 20px;">
+    <p><strong>Disclaimer:</strong> All sentiment analysis and recommendations are powered by AI and should be used for informational purposes only.
+    Neufin does not provide financial advice. Investment decisions should be made in consultation with financial professionals.</p>
+    <p>Data source: Yahoo Finance | Last updated: {}</p>
+    <div style="margin-top: 15px; opacity: 0.7;">
+        <img src="neufin-icon.svg" alt="Neufin" height="24" style="vertical-align: middle; margin-right: 8px;">
+        © 2025 Neufin Financial Intelligence
+    </div>
 </div>
 """.format(st.session_state.last_update.strftime("%Y-%m-%d %H:%M:%S")), unsafe_allow_html=True)
