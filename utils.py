@@ -37,7 +37,7 @@ def get_market_preferences():
             'default_tickers': {
                 'global': ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META'],
                 'us': ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META'],
-                'india': ['RELIANCE', 'TCS', 'HDFCBANK', 'INFY', 'ICICIBANK']
+                'india': ['RELIANCE.NS', 'TCS.NS', 'HDFCBANK.NS', 'INFY.NS', 'ICICIBANK.NS']
             }
         }
     return st.session_state.market_preferences

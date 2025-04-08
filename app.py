@@ -757,6 +757,11 @@ with st.sidebar:
     
     # Update preferences if changed
     if selected_market != market_prefs['selected_market']:
+        # Clear selected_stocks when switching markets to avoid 
+        # using stocks from one market with another market's exchange suffix
+        if 'selected_stocks' in st.session_state:
+            del st.session_state.selected_stocks
+            
         update_market_preferences('selected_market', selected_market)
         st.session_state.refresh_data = True
         st.rerun()  # Refresh to update all components with new market
