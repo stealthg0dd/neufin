@@ -16,9 +16,10 @@ import json
 import os
 
 # Import custom modules
-from data_fetcher import fetch_stock_data, fetch_market_news, fetch_sector_performance
+from data_fetcher import fetch_stock_data, fetch_market_news, fetch_sector_performance, get_market_indices as fetch_market_indices
 from sentiment_analyzer import analyze_text_sentiment, analyze_stock_sentiment, analyze_news_sentiment_batch
 from utils import format_sentiment_score, get_sentiment_color, get_market_indices, format_large_number
+from utils import get_market_preferences, update_market_preferences
 from database import store_market_sentiment, get_historical_sentiment
 from investment_advisor import get_stock_recommendations, analyze_global_trade_impact, get_sector_insights
 from subscription_manager import initialize_subscription_state, show_login_form, show_subscription_options, process_payment, check_feature_access, show_upgrade_prompt, check_trial_status
@@ -735,13 +736,55 @@ with st.sidebar:
     st.markdown('<div class="neufin-card" style="padding: 15px; margin-bottom: 20px;">', unsafe_allow_html=True)
     st.markdown('<h3 style="color: #7B68EE; margin-bottom: 15px;">Dashboard Settings</h3>', unsafe_allow_html=True)
     
-    # Stock selection
-    available_stocks = get_market_indices() + ['AAPL', 'MSFT', 'AMZN', 'GOOGL', 'META', 'TSLA', 'NFLX', 'DIS', 
-                                             'JPM', 'BAC', 'XOM', 'CVX', 'JNJ', 'PFE', 'WMT', 'PG', 'BA', 'CAT', 'NEE']
+    # Market Region Selection
+    market_prefs = get_market_preferences()
+    st.markdown('<p style="color: #AAA; font-size: 14px; margin-bottom: 5px;">Market Region</p>', unsafe_allow_html=True)
+    
+    market_options = {
+        'global': '🌎 Global Markets',
+        'us': '🇺🇸 United States',
+        'india': '🇮🇳 India'
+    }
+    
+    selected_market = st.selectbox(
+        "Select market region",
+        options=list(market_options.keys()),
+        format_func=lambda x: market_options[x],
+        index=list(market_options.keys()).index(market_prefs['selected_market']),
+        key="market_region_selector",
+        label_visibility="collapsed"
+    )
+    
+    # Update preferences if changed
+    if selected_market != market_prefs['selected_market']:
+        update_market_preferences('selected_market', selected_market)
+        st.session_state.refresh_data = True
+        st.rerun()  # Refresh to update all components with new market
+    
+    st.markdown('<hr style="margin: 15px 0px; border-color: rgba(123, 104, 238, 0.2);">', unsafe_allow_html=True)
+    
+    # Stock selection based on selected market
+    st.markdown('<p style="color: #AAA; font-size: 14px; margin-bottom: 5px;">Stocks & Indices</p>', unsafe_allow_html=True)
+    
+    # Get appropriate stocks based on market selection
+    if selected_market == 'india':
+        default_stocks = market_prefs['default_tickers']['india']
+        available_stocks = get_market_indices() + default_stocks
+    elif selected_market == 'us':
+        default_stocks = market_prefs['default_tickers']['us']
+        available_stocks = get_market_indices() + default_stocks
+    else:  # global
+        default_stocks = market_prefs['default_tickers']['global']
+        available_stocks = get_market_indices() + default_stocks
+    
+    if 'selected_stocks' not in st.session_state:
+        st.session_state.selected_stocks = default_stocks[:3]  # Start with first 3 default stocks
+    
     selected_stocks = st.multiselect(
         "Select stocks/indices to analyze",
         options=available_stocks,
-        default=st.session_state.selected_stocks
+        default=st.session_state.selected_stocks,
+        label_visibility="collapsed"
     )
     
     if selected_stocks != st.session_state.selected_stocks:
@@ -1539,22 +1582,44 @@ def load_dashboard():
         st.warning("Please select at least one stock or index to analyze.")
         return
     
+    # Get current market preferences
+    market_prefs = get_market_preferences()
+    selected_market = market_prefs['selected_market']
+    
+    # Market region indicator
+    market_indicators = {
+        'global': '🌎 Global Markets',
+        'us': '🇺🇸 US Market',
+        'india': '🇮🇳 Indian Market'
+    }
+    market_indicator = market_indicators.get(selected_market, '🌎 Global Markets')
+    
     # Overall Market Sentiment Card
     st.markdown('<div class="neufin-card">', unsafe_allow_html=True)
+    
+    # Market region display at the top
+    st.markdown(f"""
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h3 style="color: #7B68EE; margin: 0;">Overall Market Sentiment</h3>
+        <div style="background-color: rgba(123, 104, 238, 0.1); padding: 5px 10px; border-radius: 4px; 
+                    border: 1px solid rgba(123, 104, 238, 0.3);">
+            <span style="color: #E0E0E0; font-size: 14px;">{market_indicator}</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     
     col1, col2 = st.columns([2, 1])
     
     with col1:
         # Add real-time indicator to headings if auto-refresh is enabled
         real_time_indicator = """<span class="real-time-badge" style="font-size:10px; background-color: rgba(76, 175, 80, 0.2); color: #4CAF50; padding: 3px 6px; border-radius: 4px; margin-left: 8px; border: 1px solid rgba(76, 175, 80, 0.3);">🔄 LIVE</span>""" if st.session_state.auto_refresh else ""
-        st.markdown(f'<h3 style="color: #7B68EE; margin-bottom: 15px;">Overall Market Sentiment {real_time_indicator}</h3>', unsafe_allow_html=True)
         
         try:
             # Fetch major index data for overall market sentiment
             indices_data = {}
             market_sentiment_scores = []
             
-            with st.spinner("Analyzing overall market sentiment..."):
+            with st.spinner(f"Analyzing {selected_market} market sentiment..."):
                 for index in get_market_indices()[:3]:  # Only use top 3 indices
                     index_data = fetch_stock_data(index, st.session_state.time_period)
                     if index_data is not None:
@@ -1677,7 +1742,7 @@ def load_dashboard():
                             """, unsafe_allow_html=True)
                 else:
                     # For free tier: Show basic market news without fancy styling
-                    market_news = fetch_market_news()
+                    market_news = fetch_market_news(market=selected_market)
                     
                     if market_news and len(market_news) > 0:
                         # Analyze sentiment for each news headline
@@ -2014,7 +2079,7 @@ def load_dashboard():
     
     try:
         with st.spinner("Analyzing sector performance..."):
-            sectors_data = fetch_sector_performance()
+            sectors_data = fetch_sector_performance(market=selected_market)
             
             if sectors_data is not None and len(sectors_data) > 0:
                 # Calculate sentiment based on performance
@@ -2198,7 +2263,7 @@ with recommendation_tab:
                     market_sentiment = sum(market_sentiment_scores) / len(market_sentiment_scores)
                 
                 # Get sector data for recommendations
-                sectors_data = fetch_sector_performance()
+                sectors_data = fetch_sector_performance(market=selected_market)
                 
                 # Generate recommendations
                 recommendations_df = get_stock_recommendations(
@@ -2239,7 +2304,7 @@ with recommendation_tab:
                                     if st.button(f"View Detailed Analysis for {row['Ticker']}", key=f"analysis_{row['Ticker']}"):
                                         with st.spinner(f"Generating detailed investment thesis for {row['Ticker']}..."):
                                             stock_data = fetch_stock_data(row['Ticker'], st.session_state.time_period)
-                                            market_news = fetch_market_news()
+                                            market_news = fetch_market_news(market=selected_market)
                                             
                                             # Generate or get cached analysis
                                             if row['Ticker'] not in st.session_state.ai_analyses:
@@ -2326,7 +2391,7 @@ with sector_tab:
         try:
             with st.spinner("Analyzing sector performance..."):
                 # Get sector data
-                sectors_data = fetch_sector_performance()
+                sectors_data = fetch_sector_performance(market=selected_market)
                 
                 if sectors_data and len(sectors_data) > 0:
                     # Get insights for the best performing sectors

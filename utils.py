@@ -21,6 +21,38 @@ def format_sentiment_score(score):
     else:
         return "Very Bearish"
 
+def get_market_preferences():
+    """
+    Get market preferences from session state or create defaults.
+    
+    Returns:
+        dict: Market preferences including selected market and settings
+    """
+    if 'market_preferences' not in st.session_state:
+        st.session_state.market_preferences = {
+            'selected_market': 'global',
+            'show_global_insights': True,
+            'show_us_insights': True,
+            'show_india_insights': True,
+            'default_tickers': {
+                'global': ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META'],
+                'us': ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META'],
+                'india': ['RELIANCE', 'TCS', 'HDFCBANK', 'INFY', 'ICICIBANK']
+            }
+        }
+    return st.session_state.market_preferences
+
+def update_market_preferences(key, value):
+    """
+    Update a specific market preference.
+    
+    Args:
+        key (str): The preference key to update
+        value: The new value for the preference
+    """
+    prefs = get_market_preferences()
+    prefs[key] = value
+
 def get_sentiment_color(score):
     """
     Get a color representation for a sentiment score.
@@ -44,20 +76,19 @@ def get_sentiment_color(score):
 
 def get_market_indices():
     """
-    Get a list of major market indices.
+    Get a list of major market indices based on the current selected market.
     
     Returns:
         list: List of index ticker symbols
     """
-    return [
-        "^GSPC",    # S&P 500
-        "^DJI",     # Dow Jones Industrial Average
-        "^IXIC",    # NASDAQ Composite
-        "^RUT",     # Russell 2000
-        "^VIX",     # Volatility Index
-        "^FTSE",    # FTSE 100
-        "^N225",    # Nikkei 225
-    ]
+    from data_fetcher import get_market_indices as fetch_indices
+    
+    # Get current market selection
+    prefs = get_market_preferences()
+    selected_market = prefs['selected_market']
+    
+    # Use the new function from data_fetcher
+    return fetch_indices(market=selected_market)
 
 def format_large_number(num):
     """
