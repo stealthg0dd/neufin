@@ -1590,8 +1590,7 @@ def load_dashboard():
     # Market region indicator
     market_indicators = {
         'global': '🌎 Global Markets',
-        'us': '🇺🇸 US Market',
-        'india': '🇮🇳 Indian Market'
+        'us': '🇺🇸 US Market'
     }
     market_indicator = market_indicators.get(selected_market, '🌎 Global Markets')
     

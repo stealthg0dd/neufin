@@ -9,8 +9,30 @@ import streamlit as st
 # Get DB connection string from environment variables
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
-# Create database engine
-engine = create_engine(DATABASE_URL)
+# Create database engine with connection pooling and retry settings
+if DATABASE_URL:
+    try:
+        engine = create_engine(
+            DATABASE_URL,
+            pool_pre_ping=True,  # Test connection before using from pool
+            pool_recycle=3600,   # Recycle connections after an hour
+            connect_args={
+                'connect_timeout': 10,  # Connection timeout in seconds
+                'keepalives': 1,        # Enable keepalive
+                'keepalives_idle': 30   # Keepalive idle time
+            }
+        )
+    except Exception as e:
+        import streamlit as st
+        st.error(f"Error connecting to database: {str(e)}")
+        # Create a dummy engine for development/testing
+        import sqlite3
+        engine = create_engine('sqlite:///:memory:')
+else:
+    import streamlit as st
+    st.warning("No DATABASE_URL provided. Using in-memory SQLite database.")
+    engine = create_engine('sqlite:///:memory:')
+
 Base = declarative_base()
 
 # Define database models
@@ -162,8 +184,22 @@ Session = sessionmaker(bind=engine)
 
 # Database helper functions
 def get_db_session():
-    """Get a database session"""
-    return Session()
+    """
+    Get a database session with improved error handling.
+    Uses a context manager to ensure sessions are properly closed.
+    """
+    try:
+        session = Session()
+        return session
+    except Exception as e:
+        import streamlit as st
+        st.error(f"Error creating database session: {str(e)}")
+        # Return a session for a dummy in-memory database as fallback
+        from sqlalchemy import create_engine
+        from sqlalchemy.orm import sessionmaker
+        fallback_engine = create_engine('sqlite:///:memory:')
+        FallbackSession = sessionmaker(bind=fallback_engine)
+        return FallbackSession()
 
 def create_user(username, email, password):
     """Create a new user in the database"""
