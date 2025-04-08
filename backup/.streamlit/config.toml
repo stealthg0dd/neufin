@@ -1,0 +1,15 @@
+[server]
+headless = true
+address = "0.0.0.0"
+port = 5000
+
+[theme]
+primaryColor = "#7B68EE" # Futuristic purple
+backgroundColor = "#121212" # Dark background
+secondaryBackgroundColor = "#1E1E1E" # Dark secondary
+textColor = "#E0E0E0" # Light text
+font = "sans serif"
+
+[runner]
+fastReruns = true
+magicEnabled = true
