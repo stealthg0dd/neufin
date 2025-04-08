@@ -13,6 +13,7 @@ import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import time
 import json
+import os
 
 # Import custom modules
 from data_fetcher import fetch_stock_data, fetch_market_news, fetch_sector_performance
@@ -22,6 +23,11 @@ from database import store_market_sentiment, get_historical_sentiment
 from investment_advisor import get_stock_recommendations, analyze_global_trade_impact, get_sector_insights
 from subscription_manager import initialize_subscription_state, show_login_form, show_subscription_options, process_payment, check_feature_access, show_upgrade_prompt, check_trial_status
 from ai_analyst import analyze_global_trade_conditions, generate_investment_thesis, generate_sector_outlook
+from news_recommender import NewsRecommender, format_news_card
+
+# Check if OpenAI API key is available for advanced sentiment analysis
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+USE_ADVANCED_AI = bool(OPENAI_API_KEY)
 
 def create_animated_sentiment_trend(days=14, with_ai_insights=True):
     """
@@ -1596,40 +1602,119 @@ def load_dashboard():
             st.error(f"Error analyzing market sentiment: {str(e)}")
     
     with col2:
+        # Add AI indicator to news heading for premium users
+        ai_indicator = """<span style="font-size: 12px; background-color: rgba(76, 175, 80, 0.2); color: #4CAF50; padding: 3px 6px; border-radius: 4px; margin-left: 8px; border: 1px solid rgba(76, 175, 80, 0.3);">AI POWERED</span>""" if check_feature_access('premium') else ""
+        
         # Add real-time indicator to news sentiment heading if auto-refresh is enabled
-        st.markdown(f'<h3 style="color: #7B68EE; margin-bottom: 15px;">Latest News Sentiment {real_time_indicator}</h3>', unsafe_allow_html=True)
+        st.markdown(f'<h3 style="color: #7B68EE; margin-bottom: 15px;">Personalized Financial News {real_time_indicator} {ai_indicator}</h3>', unsafe_allow_html=True)
         
         try:
-            with st.spinner("Analyzing news sentiment..."):
-                # Fetch and analyze recent market news
-                market_news = fetch_market_news()
+            with st.spinner("Loading personalized news..."):
+                # Get user ID if logged in, otherwise use None for general recommendations
+                user_id = st.session_state.get('user_id') if 'user_id' in st.session_state else None
                 
-                if market_news and len(market_news) > 0:
-                    # Analyze sentiment for each news headline
-                    for i, news in enumerate(market_news[:5]):  # Show top 5 news items
-                        title = news.get('title', 'No title')
-                        sentiment_score = analyze_text_sentiment(title)
-                        sentiment_text = format_sentiment_score(sentiment_score)
-                        sentiment_color = get_sentiment_color(sentiment_score)
+                # Create news recommender instance
+                news_recommender = NewsRecommender(user_id=user_id)
+                
+                # Get recommended news - use basic recommendations for free tier, 
+                # personalized with sentiment for premium
+                use_advanced_sentiment = check_feature_access('premium') and USE_ADVANCED_AI
+                
+                if check_feature_access('basic'):
+                    # For basic or premium: Show recommended news with relevance for user
+                    recommended_news = news_recommender.get_recommendations(
+                        limit=5,
+                        include_sentiment=True
+                    )
+                    
+                    if recommended_news and len(recommended_news) > 0:
+                        # Display news with fancy cards
+                        for i, news in enumerate(recommended_news):
+                            # Show relevance score for premium users
+                            show_relevance = check_feature_access('premium')
+                            
+                            # Render HTML for news card
+                            news_html = format_news_card(
+                                news,
+                                show_relevance=show_relevance,
+                                show_sentiment=True
+                            )
+                            st.markdown(news_html, unsafe_allow_html=True)
+                            
+                            # Add "Related News" expander for premium users
+                            if check_feature_access('premium') and 'id' in news:
+                                with st.expander("Related News"):
+                                    related_news = news_recommender.get_related_news(news['id'], limit=3)
+                                    if related_news and len(related_news) > 0:
+                                        for related in related_news:
+                                            related_html = format_news_card(
+                                                related,
+                                                show_relevance=False,
+                                                show_sentiment=True
+                                            )
+                                            st.markdown(related_html, unsafe_allow_html=True)
+                                    else:
+                                        st.info("No related news found.")
+                    else:
+                        st.info("No financial news available at the moment.")
                         
-                        st.markdown(f"""
-                        <div style='background: rgba(30, 30, 46, 0.6); 
-                                    border-left: 3px solid {sentiment_color}; 
-                                    padding: 10px; 
-                                    border-radius: 5px; 
-                                    margin-bottom: 10px;'>
-                            <h4 style="margin-top: 0;">{title}</h4>
-                            <div style="display: flex; align-items: center;">
-                                <div style="width: 12px; height: 12px; border-radius: 50%; 
-                                            background-color: {sentiment_color}; margin-right: 8px;"></div>
-                                <p style="margin: 0;">{sentiment_text} ({sentiment_score:.2f})</p>
+                    # For premium users, show information about how news is personalized
+                    if check_feature_access('premium'):
+                        with st.expander("About Personalized News"):
+                            st.markdown("""
+                            <div style="color: #CCCCCC; font-size: 14px;">
+                                <p><strong>How News Personalization Works:</strong></p>
+                                <p>Our AI-driven news engine analyzes your favorites, watched stocks, and reading patterns 
+                                to recommend the most relevant financial news. News relevance is calculated using:</p>
+                                <ul>
+                                    <li>Content matching with your investment interests</li>
+                                    <li>Sentiment analysis for emotional tone</li>
+                                    <li>Keyword extraction for topic relevance</li>
+                                    <li>Reading patterns and similar users' interests</li>
+                                </ul>
+                                <p>The stars indicate how closely the news aligns with your investment profile.</p>
                             </div>
-                        </div>
-                        """, unsafe_allow_html=True)
+                            """, unsafe_allow_html=True)
                 else:
-                    st.info("No recent market news available.")
+                    # For free tier: Show basic market news without fancy styling
+                    market_news = fetch_market_news()
+                    
+                    if market_news and len(market_news) > 0:
+                        # Analyze sentiment for each news headline
+                        for i, news in enumerate(market_news[:5]):  # Show top 5 news items
+                            title = news.get('title', 'No title')
+                            sentiment_score = analyze_text_sentiment(title, use_advanced_nlp=False, use_ai=False)
+                            sentiment_text = format_sentiment_score(sentiment_score)
+                            sentiment_color = get_sentiment_color(sentiment_score)
+                            
+                            st.markdown(f"""
+                            <div style='background: rgba(30, 30, 46, 0.6); 
+                                        border-left: 3px solid {sentiment_color}; 
+                                        padding: 10px; 
+                                        border-radius: 5px; 
+                                        margin-bottom: 10px;'>
+                                <h4 style="margin-top: 0;">{title}</h4>
+                                <div style="display: flex; align-items: center;">
+                                    <div style="width: 12px; height: 12px; border-radius: 50%; 
+                                                background-color: {sentiment_color}; margin-right: 8px;"></div>
+                                    <p style="margin: 0;">{sentiment_text} ({sentiment_score:.2f})</p>
+                                </div>
+                            </div>
+                            """, unsafe_allow_html=True)
+                    else:
+                        st.info("No recent market news available.")
+                    
+                    # Show upgrade prompt for personalized news
+                    st.markdown("""
+                    <div style="background: linear-gradient(135deg, rgba(123, 104, 238, 0.1) 0%, rgba(60, 50, 120, 0.1) 100%); 
+                    border-left: 3px solid #7B68EE; padding: 10px; border-radius: 4px; margin-top: 10px;">
+                        <p style="color: #E0E0E0; margin: 0;"><strong>✨ Premium Feature:</strong> 
+                        Upgrade to Basic for personalized news recommendations and to Premium for AI-powered 
+                        content matching and advanced sentiment analysis.</p>
+                    </div>
+                    """, unsafe_allow_html=True)
         except Exception as e:
-            st.error(f"Error analyzing news sentiment: {str(e)}")
+            st.error(f"Error loading news: {str(e)}")
     
     # Close the market sentiment card
     st.markdown('</div>', unsafe_allow_html=True)
