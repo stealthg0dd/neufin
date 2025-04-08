@@ -23,12 +23,13 @@ from investment_advisor import get_stock_recommendations, analyze_global_trade_i
 from subscription_manager import initialize_subscription_state, show_login_form, show_subscription_options, process_payment, check_feature_access, show_upgrade_prompt, check_trial_status
 from ai_analyst import analyze_global_trade_conditions, generate_investment_thesis, generate_sector_outlook
 
-def create_animated_sentiment_trend(days=14):
+def create_animated_sentiment_trend(days=14, with_ai_insights=True):
     """
     Create an animated sentiment trend visualization using historical sentiment data.
     
     Args:
         days (int): Number of days to show in the trend
+        with_ai_insights (bool): Whether to include AI-generated insights
         
     Returns:
         plotly.graph_objects.Figure: Animated trend visualization
@@ -65,6 +66,51 @@ def create_animated_sentiment_trend(days=14):
     df.rename(columns={'index': 'date'}, inplace=True)
     df.interpolate(method='linear', inplace=True)
     
+    # Generate AI insights for each data point if requested
+    if with_ai_insights and 'ai_insights' not in st.session_state:
+        st.session_state.ai_insights = {}
+    
+    # Check if we need to generate new insights
+    if with_ai_insights:
+        insights_needed = False
+        for i, row in df.iterrows():
+            date_key = row['date'].strftime('%Y-%m-%d')
+            if date_key not in st.session_state.ai_insights:
+                insights_needed = True
+                break
+        
+        # Generate all needed insights at once to be more efficient
+        if insights_needed and check_feature_access('premium'):  # Make this a premium feature
+            try:
+                with st.spinner("Generating AI insights for data points..."):
+                    # Generate AI insights for all data points at once
+                    generate_sentiment_insights(df)
+            except Exception as e:
+                st.warning(f"Could not generate AI insights: {str(e)}")
+    
+    # Prepare hover templates with insights if available
+    hover_templates = []
+    for i, row in df.iterrows():
+        date_str = row['date'].strftime('%Y-%m-%d')
+        sentiment_score = row['sentiment_score']
+        sentiment_label = format_sentiment_score(sentiment_score)
+        
+        # Format the hover text
+        hover_text = f"<b>Date:</b> {date_str}<br><b>Sentiment:</b> {sentiment_label} ({sentiment_score:.2f})"
+        
+        # Add AI insight if available
+        if with_ai_insights and check_feature_access('premium'):
+            if date_str in st.session_state.ai_insights:
+                insight = st.session_state.ai_insights[date_str]
+                hover_text += f"<br><br><b>AI Insight:</b><br>{insight}"
+            else:
+                hover_text += "<br><br><i>Hover over other points for AI insights</i>"
+        
+        hover_templates.append(hover_text)
+    
+    # Add hover_templates to the DataFrame
+    df['hover_text'] = hover_templates
+    
     # Create animation frames
     frames = []
     for i in range(1, len(df) + 1):
@@ -77,14 +123,27 @@ def create_animated_sentiment_trend(days=14):
                     y=subset['sentiment_score'],
                     mode='lines+markers',
                     line=dict(width=3, color='#7B68EE'),
-                    marker=dict(size=8, color='#7B68EE')
+                    marker=dict(
+                        size=10, 
+                        color='#7B68EE',
+                        symbol='circle',
+                        line=dict(width=2, color='rgba(255, 255, 255, 0.8)')
+                    ),
+                    hoverinfo='text',
+                    hovertext=subset['hover_text'],
+                    hoverlabel=dict(
+                        bgcolor="rgba(20, 20, 30, 0.9)",
+                        bordercolor="#7B68EE",
+                        font=dict(color="white", size=12),
+                        align="left"
+                    )
                 )
             ],
             name=f'frame{i}'
         )
         frames.append(frame)
     
-    # Create the initial figure
+    # Create the initial figure with enhanced tooltips
     fig = go.Figure(
         data=[
             go.Scatter(
@@ -92,8 +151,21 @@ def create_animated_sentiment_trend(days=14):
                 y=df['sentiment_score'][:1],
                 mode='lines+markers',
                 line=dict(width=3, color='#7B68EE'),
-                marker=dict(size=8, color='#7B68EE'),
-                name='Market Sentiment'
+                marker=dict(
+                    size=10, 
+                    color='#7B68EE',
+                    symbol='circle',
+                    line=dict(width=2, color='rgba(255, 255, 255, 0.8)')
+                ),
+                name='Market Sentiment',
+                hoverinfo='text',
+                hovertext=df['hover_text'][:1],
+                hoverlabel=dict(
+                    bgcolor="rgba(20, 20, 30, 0.9)",
+                    bordercolor="#7B68EE",
+                    font=dict(color="white", size=12),
+                    align="left"
+                )
             )
         ],
         frames=frames
@@ -101,12 +173,12 @@ def create_animated_sentiment_trend(days=14):
     
     # Add play button and slider
     fig.update_layout(
-        title="Market Sentiment Trend (Animated)",
+        title="Market Sentiment Trend with AI Insights",
         title_font_color="#7B68EE",
         font_color="#E0E0E0",
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        height=300,
+        height=400,  # Increased height for better visualization
         xaxis=dict(
             showgrid=False,
             showline=True,
@@ -192,7 +264,13 @@ def create_animated_sentiment_trend(days=14):
                 font=dict(color="#E0E0E0"),
                 bgcolor="rgba(10, 10, 20, 0.8)"
             )
-        ]
+        ],
+        hoverlabel=dict(
+            bgcolor="rgba(20, 20, 30, 0.95)",
+            bordercolor="#7B68EE",
+            font=dict(family="Arial", size=12, color="white")
+        ),
+        hovermode="closest"
     )
     
     # Add annotations for sentiment trend
@@ -237,6 +315,111 @@ def create_animated_sentiment_trend(days=14):
         )
     
     return fig
+
+def generate_sentiment_insights(sentiment_df):
+    """
+    Generate AI insights for sentiment data points using Anthropic API
+    
+    Args:
+        sentiment_df (DataFrame): DataFrame containing sentiment data with dates and scores
+        
+    Returns:
+        dict: Dictionary of insights keyed by date string
+    """
+    from ai_analyst import get_anthropic_client
+    
+    # Check if we have the Anthropic API key available
+    try:
+        client = get_anthropic_client()
+        if client is None:
+            st.warning("AI insights require Anthropic API key")
+            return {}
+    except Exception as e:
+        st.warning(f"Error initializing Anthropic client: {str(e)}")
+        return {}
+    
+    # Create a cache for insights if not already present
+    if 'ai_insights' not in st.session_state:
+        st.session_state.ai_insights = {}
+    
+    # Prepare market context by getting recent market data
+    market_context = ""
+    try:
+        # Get data for market indices to provide context
+        indices = ['SPY', 'QQQ', 'DIA']
+        for idx in indices:
+            data = fetch_stock_data(idx, '1mo')
+            if data is not None:
+                change = ((data['Close'].iloc[-1] / data['Close'].iloc[0]) - 1) * 100
+                market_context += f"{idx} {'up' if change > 0 else 'down'} {abs(change):.2f}% in the last month. "
+    except:
+        # If we can't get market data, proceed with limited context
+        market_context = "Limited market context available."
+    
+    # Generate insights for each data point
+    for i, row in sentiment_df.iterrows():
+        date_str = row['date'].strftime('%Y-%m-%d')
+        
+        # Skip if we already have this insight cached
+        if date_str in st.session_state.ai_insights:
+            continue
+        
+        # Generate explanation for the sentiment score
+        score = row['sentiment_score']
+        sentiment_word = format_sentiment_score(score)
+        
+        # Prepare data from nearby days to show trend
+        nearby_days = sentiment_df[(sentiment_df['date'] >= row['date'] - pd.Timedelta(days=3)) & 
+                                  (sentiment_df['date'] <= row['date'] + pd.Timedelta(days=3))]
+        trend_data = []
+        for _, trend_row in nearby_days.iterrows():
+            trend_date = trend_row['date'].strftime('%Y-%m-%d')
+            trend_score = trend_row['sentiment_score']
+            trend_data.append(f"{trend_date}: {trend_score:.2f}")
+        
+        trend_context = ", ".join(trend_data)
+            
+        # Create prompt for Anthropic
+        prompt = f"""
+        As a market sentiment analysis AI, provide a concise, insightful explanation (max 60 words) for the 
+        {sentiment_word} sentiment score of {score:.2f} on {date_str}.
+        
+        Nearby sentiment scores: {trend_context}
+        
+        Market context: {market_context}
+        
+        Your explanation should be insightful, mention possible causes, and implications for investors. 
+        Keep it very concise, under 60 words, and make it sound professional but accessible.
+        Do not mention the word "sentiment" since that's implied. Focus on explaining likely causes.
+        
+        Example format: "Fed policy signals and stronger-than-expected jobs report drove market optimism. 
+        Tech sector showing resilience with increased institutional buying."
+        """
+        
+        try:
+            # Call Anthropic API
+            message = client.messages.create(
+                model="claude-3-5-sonnet-20241022",  # the newest Anthropic model is "claude-3-5-sonnet-20241022" which was released October 22, 2024
+                max_tokens=200,
+                temperature=0.7,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            
+            # Extract and store insight
+            insight = message.content[0].text.strip()
+            
+            # Limit length if it's too verbose
+            if len(insight) > 200:
+                insight = insight[:197] + "..."
+                
+            st.session_state.ai_insights[date_str] = insight
+            
+        except Exception as e:
+            # If API call fails, use a generic insight
+            st.session_state.ai_insights[date_str] = f"Analysis for {sentiment_word} market condition with score {score:.2f}."
+            continue
+    
+    return st.session_state.ai_insights
 
 # Custom CSS for enhanced futuristic Neufin design
 st.markdown("""
@@ -1536,7 +1719,9 @@ def load_dashboard():
     # Animated Sentiment Trend Chart - styled with neufin card
     if check_feature_access('basic'):  # Make this a basic subscription feature
         st.markdown('<div class="neufin-card">', unsafe_allow_html=True)
-        st.markdown(f'<h3 style="color: #7B68EE; margin-bottom: 15px;">Market Sentiment Trend {real_time_indicator}</h3>', unsafe_allow_html=True)
+        # Add AI indicator to the title if premium
+        ai_indicator = """<span style="font-size: 12px; background-color: rgba(76, 175, 80, 0.2); color: #4CAF50; padding: 3px 6px; border-radius: 4px; margin-left: 8px; border: 1px solid rgba(76, 175, 80, 0.3);">AI POWERED</span>""" if check_feature_access('premium') else ""
+        st.markdown(f'<h3 style="color: #7B68EE; margin-bottom: 15px;">Market Sentiment Trend {real_time_indicator} {ai_indicator}</h3>', unsafe_allow_html=True)
         
         try:
             # Store current market sentiment in the database for historical tracking
@@ -1563,12 +1748,43 @@ def load_dashboard():
                     except Exception as e:
                         st.error(f"Error storing market sentiment: {str(e)}")
             
-            # Create and display animated sentiment trend visualization
-            animated_trend = create_animated_sentiment_trend(days=14)
+            # Create and display animated sentiment trend visualization with AI insights
+            # Only use AI insights if the user has premium access
+            use_ai_insights = check_feature_access('premium')
+            animated_trend = create_animated_sentiment_trend(days=14, with_ai_insights=use_ai_insights)
             st.plotly_chart(animated_trend, use_container_width=True)
             
-            # Add informational note
-            st.info("This chart shows the sentiment trend over the past 14 days. Use the Play button to animate the trend.")
+            # Add informational notes based on subscription level
+            if use_ai_insights:
+                st.info("This chart shows the sentiment trend over the past 14 days with AI-powered insights. Hover over data points to see AI analysis, and use the Play button to animate the trend.")
+                
+                # Explain how the insights work
+                with st.expander("About AI-Generated Insights"):
+                    st.markdown("""
+                    <div style="color: #CCCCCC;">
+                        <p><strong>How AI Insights Work:</strong></p>
+                        <p>Our advanced AI system analyzes market conditions, news sentiment, and technical factors 
+                        to generate insights for each data point. When you hover over any point on the chart, you'll see:</p>
+                        <ol>
+                            <li>The date and sentiment score</li>
+                            <li>An AI-generated analysis of market conditions</li>
+                            <li>Potential factors that influenced the market sentiment that day</li>
+                        </ol>
+                        <p>These insights help you understand <em>why</em> market sentiment changed, not just <em>how</em> it changed.</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+            else:
+                st.info("This chart shows the sentiment trend over the past 14 days. Use the Play button to animate the trend.")
+                
+                # Show upgrade prompt for AI insights
+                st.markdown("""
+                <div style="background: linear-gradient(135deg, rgba(123, 104, 238, 0.1) 0%, rgba(60, 50, 120, 0.1) 100%); 
+                border-left: 3px solid #7B68EE; padding: 10px; border-radius: 4px; margin-top: 10px;">
+                    <p style="color: #E0E0E0; margin: 0;"><strong>✨ Premium Feature:</strong> 
+                    Upgrade to Premium for AI-powered insights on every data point! Our AI analyzes market conditions 
+                    to explain why sentiment changed on each date, helping you make more informed decisions.</p>
+                </div>
+                """, unsafe_allow_html=True)
             
         except Exception as e:
             st.error(f"Error generating sentiment trend: {str(e)}")
