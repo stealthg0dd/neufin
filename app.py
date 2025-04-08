@@ -260,6 +260,9 @@ if 'refresh_interval' not in st.session_state:
     st.session_state.refresh_interval = 60  # seconds
 if 'last_auto_refresh' not in st.session_state:
     st.session_state.last_auto_refresh = datetime.now()
+# Demo showcase mode toggle
+if 'show_demo' not in st.session_state:
+    st.session_state.show_demo = False
     
 # Initialize subscription state
 initialize_subscription_state()
@@ -449,6 +452,29 @@ with st.sidebar:
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)  # Close the settings card
     
+    # Demo showcase toggle card with futuristic design
+    st.markdown('<div class="neufin-card" style="padding: 15px; margin-bottom: 20px;">', unsafe_allow_html=True)
+    st.markdown('<h3 style="color: #7B68EE; margin-bottom: 15px;">Try the Demo Showcase</h3>', unsafe_allow_html=True)
+    
+    # Demo mode toggle with unique key
+    demo_mode = st.toggle("Show Interactive Demo", 
+                         value=st.session_state.show_demo,
+                         help="Explore all Neufin features in demo mode",
+                         key="demo_toggle")
+                         
+    if demo_mode != st.session_state.show_demo:
+        st.session_state.show_demo = demo_mode
+        # Force a refresh when changing between modes
+        st.rerun()
+    
+    st.markdown("""
+    <p style="font-size: 13px; color: #AAA; margin-top: 10px;">
+    Experience the full power of Neufin with our interactive demo showcase. 
+    Explore AI-powered investment insights and advanced market analytics.
+    </p>
+    """, unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+    
     # About section with futuristic design
     st.markdown('<div class="neufin-card" style="padding: 15px; margin-top: 20px;">', unsafe_allow_html=True)
     st.markdown('<h3 style="color: #7B68EE; margin-bottom: 15px;">About Neufin</h3>', unsafe_allow_html=True)
@@ -469,6 +495,638 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
+
+# Demo showcase section with previews of all features
+def load_demo_showcase():
+    # Add special styling for demo mode
+    st.markdown("""
+    <style>
+    /* Demo mode banner */
+    .demo-mode-banner {
+        background: linear-gradient(90deg, rgba(123,104,238,0.15) 0%, rgba(123,104,238,0.3) 50%, rgba(123,104,238,0.15) 100%);
+        padding: 10px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border: 1px solid rgba(123,104,238,0.4);
+        text-align: center;
+        animation: pulse 3s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(123,104,238,0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(123,104,238,0); }
+        100% { box-shadow: 0 0 0 0 rgba(123,104,238,0); }
+    }
+    
+    /* Special styles for demo cards */
+    .demo-card {
+        border: 1px solid rgba(123,104,238,0.3);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        background: linear-gradient(180deg, rgba(30,30,30,0.6) 0%, rgba(50,50,50,0.3) 100%);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .demo-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 24px rgba(123,104,238,0.3);
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # Demo mode banner
+    st.markdown("""
+    <div class="demo-mode-banner">
+        <h2 style="color: #7B68EE; margin: 0;">🎮 DEMO MODE</h2>
+        <p style="margin: 5px 0 0 0; color: #e0e0e0;">Exploring Neufin's Interactive Demo Showcase</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown('<div class="demo-card">', unsafe_allow_html=True)
+    st.markdown('<h3 style="color: #7B68EE; margin-bottom: 15px;">🎮 Interactive Demo Showcase</h3>', unsafe_allow_html=True)
+    st.markdown("""
+    <p style="font-size: 14px; margin-bottom: 20px;">
+    Experience all of Neufin's powerful features in this interactive demo. Explore our AI-powered insights, 
+    market analysis, and investment tools without signing up.
+    </p>
+    <div style="background-color: rgba(123, 104, 238, 0.1); padding: 10px; border-radius: 5px; margin-bottom: 20px;">
+        <p style="margin: 0; font-style: italic; color: #CCC;">
+        Note: This is a simulated demonstration with sample data. Switch back to the regular dashboard
+        using the toggle in the sidebar for real-time market analysis.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Create tabs for each feature demo
+    demo_tabs = st.tabs([
+        "🔮 Market Sentiment", 
+        "📈 Stock Analysis", 
+        "📊 Sector Performance", 
+        "🤖 AI Investment Advisor",
+        "🌎 Global Trade Impact"
+    ])
+    
+    # 1. Market Sentiment Demo Tab
+    with demo_tabs[0]:
+        st.subheader("Market Sentiment Analysis")
+        
+        # Sample sentiment visualization
+        sentiment_score = 0.35  # Sample positive sentiment
+        
+        # Create sentiment gauge
+        col1, col2 = st.columns([1, 1])
+        
+        with col1:
+            # Sentiment meter visualization
+            fig = go.Figure(go.Indicator(
+                mode = "gauge+number",
+                value = sentiment_score,
+                domain = {'x': [0, 1], 'y': [0, 1]},
+                title = {'text': "Market Sentiment", 'font': {'color': 'white', 'size': 16}},
+                gauge = {
+                    'axis': {'range': [-1, 1], 'tickwidth': 1, 'tickcolor': "white"},
+                    'bar': {'color': "#7B68EE"},
+                    'bgcolor': "rgba(50, 50, 50, 0.8)",
+                    'borderwidth': 2,
+                    'bordercolor': "gray",
+                    'steps': [
+                        {'range': [-1, -0.5], 'color': 'rgba(255, 65, 54, 0.5)'},
+                        {'range': [-0.5, 0], 'color': 'rgba(255, 144, 14, 0.5)'},
+                        {'range': [0, 0.5], 'color': 'rgba(44, 160, 101, 0.5)'},
+                        {'range': [0.5, 1], 'color': 'rgba(44, 160, 44, 0.5)'}
+                    ],
+                    'threshold': {
+                        'line': {'color': "white", 'width': 4},
+                        'thickness': 0.75,
+                        'value': sentiment_score
+                    }
+                }
+            ))
+            
+            fig.update_layout(
+                paper_bgcolor = 'rgba(0,0,0,0)',
+                plot_bgcolor = 'rgba(0,0,0,0)',
+                font = {'color': 'white'},
+                height = 250,
+                margin = dict(l=20, r=20, t=30, b=20)
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+        
+        with col2:
+            st.markdown("""
+            <div style="background-color: rgba(123, 104, 238, 0.1); border-radius: 10px; padding: 15px; height: 250px; display: flex; flex-direction: column; justify-content: center;">
+                <h4 style="color: #7B68EE; margin-bottom: 15px;">Sentiment Factors</h4>
+                <div style="margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span>News Sentiment:</span>
+                        <span style="color: #4CAF50;">+0.42</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" style="width: 71%; background-color: #4CAF50;"></div>
+                    </div>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span>Technical Analysis:</span>
+                        <span style="color: #FFA726;">+0.15</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" style="width: 58%; background-color: #FFA726;"></div>
+                    </div>
+                </div>
+                <div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span>Market Indices:</span>
+                        <span style="color: #42A5F5;">+0.38</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" style="width: 69%; background-color: #42A5F5;"></div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Demo market news
+        st.subheader("Recent Market News")
+        demo_news = [
+            {"title": "Fed signals potential rate cuts in upcoming meeting", "sentiment": 0.45},
+            {"title": "Tech sector leads market rally amid strong earnings", "sentiment": 0.78},
+            {"title": "Supply chain issues persist for manufacturing sector", "sentiment": -0.32},
+            {"title": "New fiscal policy expected to boost economic growth", "sentiment": 0.52}
+        ]
+        
+        for news in demo_news:
+            sentiment_color = get_sentiment_color(news["sentiment"])
+            sentiment_label = format_sentiment_score(news["sentiment"])
+            
+            st.markdown(f"""
+            <div style="padding: 10px; margin-bottom: 10px; border-radius: 5px; background-color: rgba(60, 60, 60, 0.3); border-left: 4px solid {sentiment_color};">
+                <div style="display: flex; justify-content: space-between;">
+                    <div style="flex-grow: 1;">{news["title"]}</div>
+                    <div style="color: {sentiment_color}; margin-left: 15px;">{sentiment_label}</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+    
+    # 2. Stock Analysis Demo Tab
+    with demo_tabs[1]:
+        st.subheader("Stock Performance Analysis")
+        
+        # Demo stock chart
+        chart_data = pd.DataFrame({
+            'Date': pd.date_range(start='2023-01-01', periods=90),
+            'Price': [150 + (i * 0.5 + i**1.1 * 0.05 * (-1 if i % 10 == 0 else 1)) for i in range(90)],
+            'MA7': [150 + (i * 0.5) for i in range(90)],
+            'MA20': [150 + (i * 0.45) for i in range(90)]
+        })
+        
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=chart_data['Date'], 
+            y=chart_data['Price'],
+            mode='lines',
+            name='AAPL',
+            line=dict(color='#7B68EE', width=2)
+        ))
+        fig.add_trace(go.Scatter(
+            x=chart_data['Date'], 
+            y=chart_data['MA7'],
+            mode='lines',
+            name='7-Day MA',
+            line=dict(color='#4CAF50', width=1.5, dash='dot')
+        ))
+        fig.add_trace(go.Scatter(
+            x=chart_data['Date'], 
+            y=chart_data['MA20'],
+            mode='lines',
+            name='20-Day MA',
+            line=dict(color='#FFA726', width=1.5, dash='dot')
+        ))
+        
+        fig.update_layout(
+            title="Apple Inc. (AAPL) - Demo Data",
+            xaxis_title="Date",
+            yaxis_title="Price ($)",
+            legend_title="Indicators",
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(30,30,30,0.3)',
+            font=dict(color='white'),
+            xaxis=dict(
+                showgrid=True,
+                gridwidth=1,
+                gridcolor='rgba(80,80,80,0.2)'
+            ),
+            yaxis=dict(
+                showgrid=True,
+                gridwidth=1,
+                gridcolor='rgba(80,80,80,0.2)'
+            ),
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1
+            ),
+            margin=dict(l=0, r=0, t=30, b=0),
+            height=400
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # AI Investment Analysis
+        st.subheader("AI Investment Analysis")
+        
+        demo_analysis = {
+            "strengths": [
+                "Strong earnings growth (22% YoY)",
+                "Increasing market share in premium segment",
+                "Robust cash reserves and dividend growth",
+                "Innovative product pipeline",
+            ],
+            "risks": [
+                "Supply chain vulnerabilities",
+                "Increasing regulatory scrutiny",
+                "Competitive pressure in key markets",
+                "Currency fluctuation exposure",
+            ],
+            "recommendation": "Moderate Buy",
+            "target_price": "$185.50",
+            "confidence": 0.72,
+        }
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("""
+            <div style="background-color: rgba(76, 175, 80, 0.1); border-radius: 10px; padding: 15px; height: 100%;">
+                <h4 style="color: #4CAF50; margin-bottom: 15px;">Strengths</h4>
+                <ul style="list-style-type: none; padding-left: 0;">
+            """, unsafe_allow_html=True)
+            
+            for strength in demo_analysis["strengths"]:
+                st.markdown(f"""
+                <li style="margin-bottom: 8px; display: flex;">
+                    <span style="color: #4CAF50; margin-right: 8px;">✓</span>
+                    <span>{strength}</span>
+                </li>
+                """, unsafe_allow_html=True)
+            
+            st.markdown("</ul></div>", unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown("""
+            <div style="background-color: rgba(244, 67, 54, 0.1); border-radius: 10px; padding: 15px; height: 100%;">
+                <h4 style="color: #F44336; margin-bottom: 15px;">Risks</h4>
+                <ul style="list-style-type: none; padding-left: 0;">
+            """, unsafe_allow_html=True)
+            
+            for risk in demo_analysis["risks"]:
+                st.markdown(f"""
+                <li style="margin-bottom: 8px; display: flex;">
+                    <span style="color: #F44336; margin-right: 8px;">!</span>
+                    <span>{risk}</span>
+                </li>
+                """, unsafe_allow_html=True)
+            
+            st.markdown("</ul></div>", unsafe_allow_html=True)
+        
+        # Recommendation summary
+        st.markdown(f"""
+        <div style="margin-top: 20px; background-color: rgba(123, 104, 238, 0.1); border-radius: 10px; padding: 15px; text-align: center;">
+            <h4 style="color: #7B68EE; margin-bottom: 10px;">AI Recommendation</h4>
+            <div style="font-size: 24px; font-weight: bold; margin-bottom: 5px;">{demo_analysis["recommendation"]}</div>
+            <div style="font-size: 18px; margin-bottom: 10px;">Target Price: {demo_analysis["target_price"]}</div>
+            <div style="color: #AAA; font-size: 12px;">AI Confidence Score: {demo_analysis["confidence"]}</div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    # 3. Sector Performance Demo Tab
+    with demo_tabs[2]:
+        st.subheader("Sector Performance Analysis")
+        
+        # Sample sector data
+        sectors = [
+            {"Sector": "Technology", "Performance": 12.4, "Trend": "Bullish", "Sentiment": 0.68},
+            {"Sector": "Healthcare", "Performance": 8.7, "Trend": "Bullish", "Sentiment": 0.52},
+            {"Sector": "Finance", "Performance": 5.3, "Trend": "Neutral", "Sentiment": 0.21},
+            {"Sector": "Energy", "Performance": -3.2, "Trend": "Bearish", "Sentiment": -0.35},
+            {"Sector": "Consumer Cyclical", "Performance": 7.5, "Trend": "Bullish", "Sentiment": 0.43},
+            {"Sector": "Real Estate", "Performance": -1.8, "Trend": "Neutral", "Sentiment": -0.12},
+            {"Sector": "Utilities", "Performance": 2.1, "Trend": "Neutral", "Sentiment": 0.18},
+            {"Sector": "Materials", "Performance": 4.6, "Trend": "Neutral", "Sentiment": 0.25},
+        ]
+        
+        # Performance chart
+        sectors_df = pd.DataFrame(sectors)
+        sectors_df = sectors_df.sort_values(by="Performance", ascending=False)
+        
+        sectors_df["Color"] = sectors_df["Performance"].apply(
+            lambda x: "#4CAF50" if x > 5 else "#FFA726" if x > 0 else "#F44336"
+        )
+        
+        fig = go.Figure(go.Bar(
+            x=sectors_df["Performance"],
+            y=sectors_df["Sector"],
+            orientation='h',
+            marker_color=sectors_df["Color"],
+            text=sectors_df["Performance"].apply(lambda x: f"{x}%"),
+            textposition='auto',
+        ))
+        
+        fig.update_layout(
+            title="Sector Performance (Last 30 Days)",
+            xaxis_title="Performance (%)",
+            yaxis_title="Sector",
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(30,30,30,0.3)',
+            font=dict(color='white'),
+            xaxis=dict(
+                showgrid=True,
+                gridwidth=1,
+                gridcolor='rgba(80,80,80,0.2)'
+            ),
+            yaxis=dict(
+                showgrid=False,
+            ),
+            margin=dict(l=0, r=0, t=30, b=0),
+            height=400
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # Sector insights
+        st.subheader("Top Sector AI Insights")
+        
+        top_sector = sectors_df.iloc[0]
+        
+        st.markdown(f"""
+        <div style="background-color: rgba(123, 104, 238, 0.1); border-radius: 10px; padding: 15px; margin-top: 10px;">
+            <h4 style="color: #7B68EE; margin-bottom: 15px;">{top_sector["Sector"]} Sector Outlook</h4>
+            <p style="margin-bottom: 15px;">
+                The Technology sector is showing strong momentum with a {top_sector["Performance"]}% gain over the past month. 
+                This outperformance is driven by strong earnings reports from major companies and increased capital expenditure 
+                on cloud infrastructure and AI technologies.
+            </p>
+            <div style="margin-top: 20px;">
+                <h5 style="color: #7B68EE; margin-bottom: 10px;">Key Drivers</h5>
+                <ul style="list-style-type: none; padding-left: 0;">
+                    <li style="margin-bottom: 8px; display: flex;">
+                        <span style="color: #4CAF50; margin-right: 8px;">►</span>
+                        <span>Accelerating digital transformation initiatives across industries</span>
+                    </li>
+                    <li style="margin-bottom: 8px; display: flex;">
+                        <span style="color: #4CAF50; margin-right: 8px;">►</span>
+                        <span>Increased spending on cybersecurity solutions</span>
+                    </li>
+                    <li style="margin-bottom: 8px; display: flex;">
+                        <span style="color: #4CAF50; margin-right: 8px;">►</span>
+                        <span>Expanded consumer spending on premium devices</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # 4. AI Investment Advisor Demo Tab
+    with demo_tabs[3]:
+        st.subheader("AI Investment Recommendations")
+        
+        # Sample stock recommendations
+        recommendations = [
+            {"Ticker": "AAPL", "Company": "Apple Inc.", "Score": 92, "Sector": "Technology", "Sentiment": 0.76},
+            {"Ticker": "MSFT", "Company": "Microsoft Corp.", "Score": 89, "Sector": "Technology", "Sentiment": 0.72},
+            {"Ticker": "AMZN", "Company": "Amazon.com Inc.", "Score": 87, "Sector": "Consumer Cyclical", "Sentiment": 0.68},
+            {"Ticker": "UNH", "Company": "UnitedHealth Group", "Score": 84, "Sector": "Healthcare", "Sentiment": 0.65},
+            {"Ticker": "V", "Company": "Visa Inc.", "Score": 82, "Sector": "Finance", "Sentiment": 0.63},
+        ]
+        
+        # Create a dataframe for the recommendations
+        rec_df = pd.DataFrame(recommendations)
+        
+        # Style the recommendations table
+        st.markdown("""
+        <div style="background-color: rgba(123, 104, 238, 0.1); border-radius: 10px; padding: 15px; margin-bottom: 20px;">
+            <h4 style="color: #7B68EE; margin-bottom: 15px;">Top Investment Opportunities</h4>
+            <p style="margin-bottom: 15px;">
+                Our AI has analyzed market trends, company fundamentals, and sentiment indicators to identify these top 
+                investment opportunities with strong growth potential.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Display the recommendation table
+        for i, row in rec_df.iterrows():
+            score_color = "#4CAF50" if row["Score"] >= 85 else "#FFA726"
+            
+            st.markdown(f"""
+            <div style="padding: 15px; margin-bottom: 10px; border-radius: 10px; background-color: rgba(40, 40, 40, 0.3); 
+                 border-left: 4px solid {score_color}; display: flex; align-items: center;">
+                <div style="flex: 0 0 80px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: bold; color: {score_color};">{row["Score"]}</div>
+                    <div style="font-size: 12px; color: #AAA;">Score</div>
+                </div>
+                <div style="flex-grow: 1; margin-left: 15px;">
+                    <div style="font-size: 18px; font-weight: bold;">{row["Ticker"]}</div>
+                    <div style="font-size: 14px; color: #CCC;">{row["Company"]}</div>
+                </div>
+                <div style="flex: 0 0 120px; text-align: right;">
+                    <div style="font-size: 14px; color: #AAA;">{row["Sector"]}</div>
+                    <div style="font-size: 14px; color: {get_sentiment_color(row["Sentiment"])};">
+                        {format_sentiment_score(row["Sentiment"])}
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Strategy recommendations
+        st.subheader("Investment Strategy")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("""
+            <div style="background-color: rgba(60, 60, 60, 0.3); border-radius: 10px; padding: 15px; height: 100%;">
+                <h4 style="color: #7B68EE; margin-bottom: 15px;">Short-Term Strategy (1-3 Months)</h4>
+                <ul style="list-style-type: none; padding-left: 0;">
+                    <li style="margin-bottom: 12px; display: flex;">
+                        <span style="color: #7B68EE; margin-right: 8px;">▶</span>
+                        <span>Focus on high-quality tech stocks with strong earnings</span>
+                    </li>
+                    <li style="margin-bottom: 12px; display: flex;">
+                        <span style="color: #7B68EE; margin-right: 8px;">▶</span>
+                        <span>Consider healthcare companies with innovative products</span>
+                    </li>
+                    <li style="margin-bottom: 12px; display: flex;">
+                        <span style="color: #7B68EE; margin-right: 8px;">▶</span>
+                        <span>Reduce exposure to interest-rate sensitive sectors</span>
+                    </li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown("""
+            <div style="background-color: rgba(60, 60, 60, 0.3); border-radius: 10px; padding: 15px; height: 100%;">
+                <h4 style="color: #7B68EE; margin-bottom: 15px;">Long-Term Outlook (6-12 Months)</h4>
+                <ul style="list-style-type: none; padding-left: 0;">
+                    <li style="margin-bottom: 12px; display: flex;">
+                        <span style="color: #7B68EE; margin-right: 8px;">▶</span>
+                        <span>Position for AI-driven growth across multiple sectors</span>
+                    </li>
+                    <li style="margin-bottom: 12px; display: flex;">
+                        <span style="color: #7B68EE; margin-right: 8px;">▶</span>
+                        <span>Add quality dividend payers for potential volatility</span>
+                    </li>
+                    <li style="margin-bottom: 12px; display: flex;">
+                        <span style="color: #7B68EE; margin-right: 8px;">▶</span>
+                        <span>Consider international diversification in select markets</span>
+                    </li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
+    
+    # 5. Global Trade Impact Demo Tab
+    with demo_tabs[4]:
+        st.subheader("Global Trade Impact Analysis")
+        
+        # Global trade impact visualization
+        st.markdown("""
+        <div style="background-color: rgba(123, 104, 238, 0.1); border-radius: 10px; padding: 15px; margin-bottom: 20px;">
+            <h4 style="color: #7B68EE; margin-bottom: 15px;">Current Global Trade Conditions</h4>
+            <p style="margin-bottom: 15px;">
+                Our AI analysis has identified the following key trade factors affecting global markets and specific 
+                investment opportunities.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Key trade factors
+        factors = [
+            {
+                "title": "Technology Export Controls",
+                "description": "Increasing restrictions on semiconductor and AI technology exports to specific regions",
+                "impact": "High",
+                "affected_sectors": ["Technology", "Communication Services"],
+                "trend": "Increasing"
+            },
+            {
+                "title": "Supply Chain Reshoring",
+                "description": "Major corporations relocating manufacturing closer to consumer markets",
+                "impact": "Medium",
+                "affected_sectors": ["Industrials", "Consumer Goods", "Technology"],
+                "trend": "Stable"
+            },
+            {
+                "title": "Agricultural Tariffs",
+                "description": "New tariffs on agricultural products between major trading partners",
+                "impact": "Medium",
+                "affected_sectors": ["Consumer Staples", "Agriculture"],
+                "trend": "Decreasing"
+            }
+        ]
+        
+        for factor in factors:
+            impact_color = {
+                "High": "#F44336",
+                "Medium": "#FFA726",
+                "Low": "#4CAF50"
+            }.get(factor["impact"], "#7B68EE")
+            
+            trend_icon = {
+                "Increasing": "↗",
+                "Stable": "→",
+                "Decreasing": "↘"
+            }.get(factor["trend"], "→")
+            
+            st.markdown(f"""
+            <div style="padding: 15px; margin-bottom: 15px; border-radius: 10px; background-color: rgba(40, 40, 40, 0.3);">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <div style="font-size: 16px; font-weight: bold;">{factor["title"]}</div>
+                    <div style="display: flex; align-items: center;">
+                        <span style="color: {impact_color}; margin-right: 5px;">Impact: {factor["impact"]}</span>
+                        <span style="color: #AAA; margin-left: 10px;">{trend_icon} {factor["trend"]}</span>
+                    </div>
+                </div>
+                <p style="margin-bottom: 10px; color: #CCC; font-size: 14px;">
+                    {factor["description"]}
+                </p>
+                <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;">
+            """, unsafe_allow_html=True)
+            
+            for sector in factor["affected_sectors"]:
+                st.markdown(f"""
+                <div style="background-color: rgba(123, 104, 238, 0.2); border-radius: 50px; padding: 5px 12px; font-size: 12px;">
+                    {sector}
+                </div>
+                """, unsafe_allow_html=True)
+            
+            st.markdown("</div></div>", unsafe_allow_html=True)
+        
+        # Investment recommendations based on global trade
+        st.subheader("Related Investment Opportunities")
+        
+        trade_investments = [
+            {
+                "title": "Domestic Semiconductor Production",
+                "description": "Companies benefiting from government incentives for local chip manufacturing",
+                "tickers": ["INTC", "TSM", "AMAT"],
+                "potential": "High Growth"
+            },
+            {
+                "title": "Supply Chain Analytics",
+                "description": "Firms providing technology solutions for supply chain resilience and visibility",
+                "tickers": ["CRM", "SAP", "DSGX"],
+                "potential": "Steady Growth"
+            }
+        ]
+        
+        col1, col2 = st.columns(2)
+        
+        for i, inv in enumerate(trade_investments):
+            with col1 if i % 2 == 0 else col2:
+                st.markdown(f"""
+                <div style="background-color: rgba(60, 60, 60, 0.3); border-radius: 10px; padding: 15px; margin-bottom: 15px;">
+                    <h4 style="color: #7B68EE; margin-bottom: 10px;">{inv["title"]}</h4>
+                    <p style="margin-bottom: 10px; font-size: 14px; color: #CCC;">
+                        {inv["description"]}
+                    </p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                        <div style="display: flex; gap: 5px;">
+                """, unsafe_allow_html=True)
+                
+                for ticker in inv["tickers"]:
+                    st.markdown(f"""
+                    <div style="background-color: rgba(123, 104, 238, 0.3); border-radius: 5px; padding: 3px 8px; font-size: 12px; font-weight: bold;">
+                        {ticker}
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                st.markdown(f"""
+                        </div>
+                        <div style="color: #4CAF50; font-size: 12px;">
+                            {inv["potential"]}
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+    
+    # Call-to-action for subscription
+    st.markdown("""
+    <div style="background: linear-gradient(90deg, rgba(123, 104, 238, 0.3) 0%, rgba(60, 60, 90, 0.3) 100%); 
+         border-radius: 10px; padding: 20px; margin-top: 20px; text-align: center;">
+        <h3 style="color: #7B68EE; margin-bottom: 10px;">Ready to unlock the full power of Neufin?</h3>
+        <p style="margin-bottom: 20px;">
+            Upgrade your account to access all premium features, including AI-powered recommendations,
+            detailed analysis, and personalized insights.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)  # Close the demo card
 
 # Main content area with futuristic styling
 def load_dashboard():
@@ -1388,15 +2046,21 @@ if (st.session_state.auto_refresh and
     # Visual indicator for real-time refresh
     st.toast(f"🔄 Data refreshed automatically at {datetime.now().strftime('%H:%M:%S')}", icon="🔄")
 
-if st.session_state.refresh_data:
-    with st.spinner("Refreshing data in real-time..."):
-        load_dashboard()
-        # Reset the refresh flag after loading
-        st.session_state.refresh_data = False
-        # Update the last update timestamp
-        st.session_state.last_update = datetime.now()
+# Check if demo showcase mode is enabled
+if st.session_state.show_demo:
+    # Show the demo showcase instead of the regular dashboard
+    load_demo_showcase()
 else:
-    load_dashboard()
+    # Regular dashboard flow
+    if st.session_state.refresh_data:
+        with st.spinner("Refreshing data in real-time..."):
+            load_dashboard()
+            # Reset the refresh flag after loading
+            st.session_state.refresh_data = False
+            # Update the last update timestamp
+            st.session_state.last_update = datetime.now()
+    else:
+        load_dashboard()
     
 # Set up automatic rerun for real-time updates if enabled
 if st.session_state.auto_refresh:
