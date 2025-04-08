@@ -14,6 +14,8 @@ from datetime import datetime, timedelta
 import time
 import json
 import os
+import re
+from urllib.parse import parse_qs, urlparse
 
 # Import custom modules
 from data_fetcher import fetch_stock_data, fetch_market_news, fetch_sector_performance, get_market_indices as fetch_market_indices
@@ -22,13 +24,52 @@ from utils import format_sentiment_score, get_sentiment_color, get_market_indice
 from utils import get_market_preferences, update_market_preferences
 from database import store_market_sentiment, get_historical_sentiment
 from investment_advisor import get_stock_recommendations, analyze_global_trade_impact, get_sector_insights
-from subscription_manager import initialize_subscription_state, show_login_form, show_subscription_options, process_payment, check_feature_access, show_upgrade_prompt, check_trial_status
 from ai_analyst import analyze_global_trade_conditions, generate_investment_thesis, generate_sector_outlook
 from news_recommender import NewsRecommender, format_news_card
+
+# Import authentication and subscription modules
+from auth_manager import (
+    init_auth_session, is_authenticated, get_current_user, 
+    login_user, register_user, logout_user, init_google_oauth,
+    handle_google_callback, user_has_permission, require_login,
+    require_permission, show_login_ui, show_user_profile_ui, start_free_trial
+)
+from subscription_manager import (
+    create_checkout_session, handle_subscription_webhook,
+    show_payment_ui, show_payment_success_ui, show_subscription_management
+)
 
 # Check if OpenAI API key is available for advanced sentiment analysis
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 USE_ADVANCED_AI = bool(OPENAI_API_KEY)
+
+# Initialize authentication session state
+init_auth_session()
+
+# Check if user has access to specific features based on subscription level
+def check_feature_access(feature):
+    """
+    Check if current user has access to a specific feature based on subscription level.
+    
+    Args:
+        feature (str): Feature name to check ('basic', 'premium', 'free', etc.)
+    
+    Returns:
+        bool: True if user has access, False otherwise
+    """
+    if not is_authenticated():
+        return feature == 'free'  # Only free features for non-authenticated users
+        
+    if feature == 'free':
+        return True  # Everyone has access to free features
+        
+    # Get current user information
+    user = get_current_user()
+    if not user:
+        return False
+        
+    # Check subscription permissions
+    return user_has_permission(feature + '_features')
 
 def create_animated_sentiment_trend(days=14, with_ai_insights=True):
     """
@@ -428,6 +469,166 @@ def generate_sentiment_insights(sentiment_df):
     
     return st.session_state.ai_insights
 
+# Helper function to show upgrade prompt for premium features
+def show_upgrade_prompt(feature_name, subscription_level="premium"):
+    """Display an upgrade prompt for premium features"""
+    st.info(f"💎 **{feature_name}** is a {subscription_level.capitalize()} feature. Please subscribe to access it.")
+    
+    if not is_authenticated():
+        st.warning("You need to log in first to access subscription options.")
+        if st.button("Log In / Register"):
+            st.session_state["show_auth"] = True
+            st.experimental_rerun()
+    else:
+        if st.button("Upgrade Subscription"):
+            st.session_state["show_subscription"] = True
+            st.experimental_rerun()
+
+# Initialize page navigation
+if "current_page" not in st.session_state:
+    st.session_state["current_page"] = "dashboard"
+    
+if "show_auth" not in st.session_state:
+    st.session_state["show_auth"] = False
+    
+if "show_subscription" not in st.session_state:
+    st.session_state["show_subscription"] = False
+    
+if "show_profile" not in st.session_state:
+    st.session_state["show_profile"] = False
+    
+if "show_payment" not in st.session_state:
+    st.session_state["show_payment"] = False
+    
+if "payment_plan" not in st.session_state:
+    st.session_state["payment_plan"] = "basic"
+    
+if "payment_success" not in st.session_state:
+    st.session_state["payment_success"] = False
+    
+if "payment_session_id" not in st.session_state:
+    st.session_state["payment_session_id"] = None
+
+# Parse URL for OAuth callbacks
+query_params = st.experimental_get_query_params()
+if "code" in query_params and "state" in query_params:
+    # Handle OAuth callback
+    code = query_params["code"][0]
+    state = query_params["state"][0]
+    
+    # Process the callback
+    success = handle_google_callback(state, code)
+    
+    # Clear query parameters to avoid processing callback twice
+    st.experimental_set_query_params()
+    
+    if success:
+        st.session_state["show_auth"] = False
+        st.experimental_rerun()
+        
+# Check for payment success callback
+if "session_id" in query_params and "payment_success" in st.session_state and st.session_state["payment_success"]:
+    st.session_state["payment_session_id"] = query_params["session_id"][0]
+    st.experimental_set_query_params()
+
+# Navigation bar - always show at the top
+def show_navigation():
+    """Display navigation bar with user info"""
+    cols = st.columns([8, 2])
+    
+    with cols[0]:
+        st.title("Neufin Market Intelligence")
+    
+    with cols[1]:
+        if is_authenticated():
+            user = get_current_user()
+            
+            # User dropdown menu
+            user_menu = st.selectbox(
+                "👤 " + user["username"],
+                ["Dashboard", "My Profile", "Subscription", "Logout"],
+                label_visibility="collapsed"
+            )
+            
+            if user_menu == "My Profile":
+                st.session_state["show_profile"] = True
+                st.experimental_rerun()
+            elif user_menu == "Subscription":
+                st.session_state["show_subscription"] = True
+                st.experimental_rerun()
+            elif user_menu == "Logout":
+                logout_user()
+                st.experimental_rerun()
+        else:
+            if st.button("Login / Signup"):
+                st.session_state["show_auth"] = True
+                st.experimental_rerun()
+    
+    st.markdown("---")
+
+# Show navigation at the top
+show_navigation()
+
+# Show auth UI if requested
+if st.session_state["show_auth"]:
+    show_login_ui()
+    
+    # Don't show main content when auth UI is visible
+    st.stop()
+
+# Show profile UI if requested
+if st.session_state["show_profile"]:
+    show_user_profile_ui()
+    
+    if st.button("Back to Dashboard", key="back_from_profile"):
+        st.session_state["show_profile"] = False
+        st.experimental_rerun()
+        
+    # Don't show main content when profile UI is visible
+    st.stop()
+
+# Show subscription management if requested
+if st.session_state["show_subscription"]:
+    user = get_current_user()
+    if user:
+        show_subscription_management(user["id"])
+    else:
+        st.error("User information not available. Please log in again.")
+        if st.button("Back to Dashboard", key="back_from_sub_error"):
+            st.session_state["show_subscription"] = False
+            st.experimental_rerun()
+    
+    if st.button("Back to Dashboard", key="back_from_sub"):
+        st.session_state["show_subscription"] = False
+        st.experimental_rerun()
+        
+    # Don't show main content when subscription UI is visible
+    st.stop()
+
+# Show payment UI if requested
+if st.session_state.get("redirect_to_payment", False):
+    user = get_current_user()
+    if user:
+        plan = st.session_state["payment_plan"]
+        show_payment_ui(user["id"], plan)
+    else:
+        st.error("User information not available. Please log in again.")
+    
+    if st.button("Back to Dashboard", key="back_from_payment"):
+        st.session_state["redirect_to_payment"] = False
+        st.experimental_rerun()
+        
+    # Don't show main content when payment UI is visible
+    st.stop()
+
+# Show payment success UI if needed
+if "payment_success" in query_params:
+    session_id = st.session_state.get("payment_session_id")
+    show_payment_success_ui(session_id)
+    
+    # Don't show main content when payment success UI is visible
+    st.stop()
+
 # Custom CSS for enhanced futuristic Neufin design
 st.markdown("""
 <style>
@@ -669,10 +870,6 @@ if 'last_auto_refresh' not in st.session_state:
 # Demo showcase mode toggle
 if 'show_demo' not in st.session_state:
     st.session_state.show_demo = False
-    
-# Initialize subscription state
-initialize_subscription_state()
-check_trial_status()
 
 # Main title with futuristic styling
 # Add real-time badge if auto-refresh is enabled
@@ -720,18 +917,47 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
     
-    # Custom styled login container
+    # Custom styled login/account container
     st.markdown('<div class="neufin-card" style="padding: 15px; margin-bottom: 20px;">', unsafe_allow_html=True)
-    # Add login/subscription management
-    show_login_form()
-    st.markdown('</div>', unsafe_allow_html=True)
     
-    # Show subscription options if logged in with custom styling
-    if st.session_state.user_logged_in:
-        st.markdown('<div class="neufin-card" style="padding: 15px; margin-bottom: 20px;">', unsafe_allow_html=True)
-        show_subscription_options()
-        process_payment()
-        st.markdown('</div>', unsafe_allow_html=True)
+    # Show user info if logged in, otherwise show login button
+    if is_authenticated():
+        user = get_current_user()
+        st.markdown(f"""
+        <div style="text-align: center; margin-bottom: 15px;">
+            <h3 style="color: #E0E0E0; margin-bottom: 5px;">👤 {user['username']}</h3>
+            <p style="color: #AAAAAA; font-size: 12px;">{user['email']}</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Show account management buttons
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("My Profile", use_container_width=True):
+                st.session_state["show_profile"] = True
+                st.experimental_rerun()
+        with col2:
+            if st.button("Subscription", use_container_width=True):
+                st.session_state["show_subscription"] = True
+                st.experimental_rerun()
+                
+        # Logout button
+        if st.button("Logout", use_container_width=True):
+            logout_user()
+            st.experimental_rerun()
+    else:
+        st.markdown("""
+        <h3 style="color: #7B68EE; text-align: center; margin-bottom: 15px;">Account Access</h3>
+        <p style="text-align: center; color: #AAAAAA; margin-bottom: 15px;">
+            Log in to access premium features and personalized insights.
+        </p>
+        """, unsafe_allow_html=True)
+        
+        if st.button("Login / Sign Up", use_container_width=True):
+            st.session_state["show_auth"] = True
+            st.experimental_rerun()
+    
+    st.markdown('</div>', unsafe_allow_html=True)
     
     st.markdown('<div class="neufin-card" style="padding: 15px; margin-bottom: 20px;">', unsafe_allow_html=True)
     st.markdown('<h3 style="color: #7B68EE; margin-bottom: 15px;">Dashboard Settings</h3>', unsafe_allow_html=True)
