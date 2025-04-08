@@ -5,26 +5,38 @@ from datetime import datetime, timedelta
 import time
 import streamlit as st
 import random
+from database import cache_stock_data, get_cached_stock_data
 
-@st.cache_data(ttl=600)  # Cache data for 10 minutes
-def fetch_stock_data(ticker, period='1mo'):
+def fetch_stock_data(ticker, period='1mo', use_cache=True):
     """
     Fetch stock data for a given ticker and period from Yahoo Finance.
     
     Args:
         ticker (str): Stock ticker symbol
         period (str): Time period (1d, 5d, 1mo, 3mo, 6mo, 1y, etc.)
+        use_cache (bool): Whether to use database cache
     
     Returns:
         pandas.DataFrame: DataFrame containing stock data
     """
     try:
+        # Check if we can get data from cache
+        if use_cache:
+            cached_data = get_cached_stock_data(ticker, period, max_age_hours=1)
+            if cached_data is not None:
+                return cached_data
+        
+        # If not in cache or cache disabled, fetch from Yahoo Finance
         stock = yf.Ticker(ticker)
         data = stock.history(period=period)
         
         if data.empty:
             st.warning(f"No data available for {ticker} in the selected period.")
             return None
+        
+        # Cache the data for future use
+        if use_cache:
+            cache_stock_data(ticker, period, data)
         
         return data
     except Exception as e:

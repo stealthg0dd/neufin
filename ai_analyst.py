@@ -6,6 +6,7 @@ import json
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+from database import cache_ai_analysis, get_cached_ai_analysis
 
 #the newest Anthropic model is "claude-3-5-sonnet-20241022" which was released October 22, 2024
 
@@ -19,13 +20,22 @@ def get_anthropic_client():
     
     return Anthropic(api_key=anthropic_key)
 
-def analyze_global_trade_conditions():
+def analyze_global_trade_conditions(use_cache=True):
     """
     Use Anthropic to analyze current global trade conditions and their impacts on investments.
+    
+    Args:
+        use_cache (bool): Whether to use database cache
     
     Returns:
         dict: Analysis results including trends, impacts, and recommendations
     """
+    # Try to get cached analysis first
+    if use_cache:
+        cached_analysis = get_cached_ai_analysis('trade')
+        if cached_analysis:
+            return cached_analysis
+    
     client = get_anthropic_client()
     
     if not client:
@@ -90,6 +100,10 @@ def analyze_global_trade_conditions():
             # Add reference date
             analysis["reference_date"] = current_date
             
+            # Cache the analysis for future use
+            if use_cache:
+                cache_ai_analysis('trade', None, analysis)
+            
             return analysis
             
         except json.JSONDecodeError:
@@ -106,7 +120,7 @@ def analyze_global_trade_conditions():
             "summary": "Analysis temporarily unavailable due to service error. Please try again later.",
         }
 
-def generate_investment_thesis(ticker, stock_data, market_news, market_sentiment):
+def generate_investment_thesis(ticker, stock_data, market_news, market_sentiment, use_cache=True):
     """
     Generate an investment thesis for a specific stock using AI analysis.
     
@@ -115,10 +129,17 @@ def generate_investment_thesis(ticker, stock_data, market_news, market_sentiment
         stock_data (DataFrame): Historical stock data
         market_news (list): Relevant market news
         market_sentiment (float): Overall market sentiment score
+        use_cache (bool): Whether to use database cache
         
     Returns:
         dict: Investment thesis including strengths, weaknesses, and recommendation
     """
+    # Try to get cached analysis first
+    if use_cache:
+        cached_thesis = get_cached_ai_analysis('stock', ticker)
+        if cached_thesis:
+            return cached_thesis
+    
     client = get_anthropic_client()
     
     if not client:
@@ -241,6 +262,10 @@ def generate_investment_thesis(ticker, stock_data, market_news, market_sentiment
             thesis["ticker"] = ticker
             thesis["analysis_date"] = current_date
             
+            # Cache the thesis for future use
+            if use_cache:
+                cache_ai_analysis('stock', ticker, thesis)
+            
             return thesis
             
         except json.JSONDecodeError:
@@ -257,7 +282,7 @@ def generate_investment_thesis(ticker, stock_data, market_news, market_sentiment
             "analysis_date": current_date,
         }
 
-def generate_sector_outlook(sector_name, sector_data, market_sentiment):
+def generate_sector_outlook(sector_name, sector_data, market_sentiment, use_cache=True):
     """
     Generate a comprehensive sector outlook using AI analysis.
     
@@ -265,10 +290,17 @@ def generate_sector_outlook(sector_name, sector_data, market_sentiment):
         sector_name (str): Name of the sector
         sector_data (dict): Performance data for the sector
         market_sentiment (float): Overall market sentiment score
+        use_cache (bool): Whether to use database cache
         
     Returns:
         dict: Sector outlook including trends, opportunities, and challenges
     """
+    # Try to get cached analysis first
+    if use_cache:
+        cached_outlook = get_cached_ai_analysis('sector', sector_name)
+        if cached_outlook:
+            return cached_outlook
+    
     client = get_anthropic_client()
     
     if not client:
@@ -367,6 +399,10 @@ def generate_sector_outlook(sector_name, sector_data, market_sentiment):
             outlook["sector"] = sector_name
             outlook["analysis_date"] = current_date
             outlook["performance"] = sector_performance
+            
+            # Cache the outlook for future use
+            if use_cache:
+                cache_ai_analysis('sector', sector_name, outlook)
             
             return outlook
             

@@ -2,6 +2,10 @@ import streamlit as st
 from datetime import datetime, timedelta
 import json
 import uuid
+from database import (
+    create_user, authenticate_user, get_user_subscription, 
+    update_subscription, get_user_settings, update_user_settings
+)
 
 def initialize_subscription_state():
     """Initialize session state variables for subscription management"""
@@ -37,6 +41,9 @@ def initialize_subscription_state():
     
     if 'selected_plan' not in st.session_state:
         st.session_state.selected_plan = None
+        
+    if 'favorites' not in st.session_state:
+        st.session_state.favorites = []
 
 def show_login_form():
     """Display login form for users"""
@@ -60,35 +67,70 @@ def show_login_form():
                 st.session_state.login_error = ""
             
             if login_submitted:
-                # In a real app, this would validate against a database
                 if email and password:
-                    # Simulate successful login
-                    st.session_state.user_logged_in = True
-                    st.session_state.user_email = email
-                    st.session_state.user_name = email.split('@')[0]
-                    st.session_state.user_id = str(uuid.uuid4())
-                    st.session_state.subscription_level = "free"
+                    # Authenticate user with database
+                    user, error = authenticate_user(email, password)
                     
-                    # Check if user should get a trial
-                    activate_premium_trial()
-                    
-                    st.rerun()
+                    if user:
+                        # User authenticated successfully
+                        st.session_state.user_logged_in = True
+                        st.session_state.user_email = user.email
+                        st.session_state.user_name = user.username
+                        st.session_state.user_id = user.id
+                        
+                        # Get subscription info
+                        subscription = get_user_subscription(user.id)
+                        if subscription:
+                            st.session_state.subscription_level = subscription.level
+                            st.session_state.subscription_expiry = subscription.end_date
+                            st.session_state.trial_active = subscription.is_trial
+                            
+                            # Check if trial is active but has expired
+                            check_trial_status()
+                        else:
+                            st.session_state.subscription_level = "free"
+                        
+                        st.rerun()
+                    else:
+                        st.session_state.login_error = error or "Authentication failed"
                 else:
                     st.session_state.login_error = "Please enter both email and password"
             
             elif signup_submitted:
                 if email and password:
-                    # Simulate successful signup
-                    st.session_state.user_logged_in = True
-                    st.session_state.user_email = email
-                    st.session_state.user_name = email.split('@')[0]
-                    st.session_state.user_id = str(uuid.uuid4())
-                    st.session_state.subscription_level = "free"
+                    # Create new user in database
+                    username = email.split('@')[0]
+                    user, error = create_user(username, email, password)
                     
-                    # Activate premium trial for new users
-                    activate_premium_trial()
-                    
-                    st.rerun()
+                    if user:
+                        # User created successfully
+                        st.session_state.user_logged_in = True
+                        st.session_state.user_email = user.email
+                        st.session_state.user_name = user.username
+                        st.session_state.user_id = user.id
+                        
+                        # Get subscription info (should be free tier by default)
+                        subscription = get_user_subscription(user.id)
+                        if subscription:
+                            st.session_state.subscription_level = subscription.level
+                        else:
+                            st.session_state.subscription_level = "free"
+                        
+                        # Activate premium trial for new users
+                        activate_premium_trial()
+                        
+                        # Update subscription in database with trial info
+                        if st.session_state.trial_active and st.session_state.trial_end_date:
+                            update_subscription(
+                                user.id, 
+                                st.session_state.subscription_level,
+                                is_trial=True,
+                                end_date=st.session_state.trial_end_date
+                            )
+                        
+                        st.rerun()
+                    else:
+                        st.session_state.login_error = error or "Failed to create account"
                 else:
                     st.session_state.login_error = "Please enter both email and password"
     else:
@@ -193,7 +235,19 @@ def show_subscription_options():
     if st.session_state.subscription_level != "free":
         st.sidebar.markdown("---")
         if st.sidebar.button("Downgrade to Free Tier"):
+            # Update subscription in database
+            if st.session_state.user_id:
+                update_subscription(
+                    st.session_state.user_id,
+                    "free",
+                    is_trial=False,
+                    end_date=None
+                )
+            
+            # Update session state
             st.session_state.subscription_level = "free"
+            st.session_state.subscription_expiry = None
+            
             st.sidebar.success("Subscription downgraded to Free Tier")
             st.rerun()
 
@@ -228,9 +282,21 @@ def process_payment():
             
             # Submit payment
             if st.form_submit_button("Complete Payment"):
-                # Process would happen here in a real app
+                # Calculate expiry date
+                expiry_date = datetime.now() + timedelta(days=30)
+                
+                # Update subscription in database
+                if st.session_state.user_id:
+                    update_subscription(
+                        st.session_state.user_id,
+                        plan,
+                        is_trial=False,
+                        end_date=expiry_date
+                    )
+                
+                # Update session state
                 st.session_state.subscription_level = plan
-                st.session_state.subscription_expiry = datetime.now() + timedelta(days=30)
+                st.session_state.subscription_expiry = expiry_date
                 st.session_state.payment_processing = False
                 st.session_state.selected_plan = None
                 
@@ -254,8 +320,21 @@ def activate_premium_trial():
         not st.session_state.trial_active and 
         not st.session_state.trial_end_date):
         
+        # Set trial end date
+        trial_end_date = datetime.now() + timedelta(days=14)  # 14-day trial
+        
+        # Update session state
         st.session_state.trial_active = True
-        st.session_state.trial_end_date = datetime.now() + timedelta(days=14)  # 14-day trial
+        st.session_state.trial_end_date = trial_end_date
+        
+        # Update subscription in database
+        if st.session_state.user_id:
+            update_subscription(
+                st.session_state.user_id,
+                st.session_state.subscription_level,
+                is_trial=True,
+                end_date=trial_end_date
+            )
 
 def check_feature_access(feature_level):
     """
@@ -310,3 +389,12 @@ def check_trial_status():
         # Trial has expired
         st.session_state.trial_active = False
         st.session_state.trial_end_date = None
+        
+        # Update subscription in database
+        if st.session_state.user_id:
+            update_subscription(
+                st.session_state.user_id,
+                "free",  # Revert to free tier
+                is_trial=False,
+                end_date=None
+            )
