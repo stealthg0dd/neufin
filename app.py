@@ -472,15 +472,18 @@ def generate_sentiment_insights(sentiment_df):
 # Helper function to show upgrade prompt for premium features
 def show_upgrade_prompt(feature_name, subscription_level="premium"):
     """Display an upgrade prompt for premium features"""
+    # Generate unique button keys based on feature name to avoid duplicate IDs
+    feature_key = feature_name.lower().replace(" ", "_").replace("-", "_")
+    
     st.info(f"💎 **{feature_name}** is a {subscription_level.capitalize()} feature. Please subscribe to access it.")
     
     if not is_authenticated():
         st.warning("You need to log in first to access subscription options.")
-        if st.button("Log In / Register"):
+        if st.button("Log In / Register", key=f"login_for_{feature_key}"):
             st.session_state["show_auth"] = True
             st.rerun()
     else:
-        if st.button("Upgrade Subscription"):
+        if st.button("Upgrade Subscription", key=f"upgrade_for_{feature_key}"):
             st.session_state["show_subscription"] = True
             st.rerun()
 
@@ -559,7 +562,7 @@ def show_navigation():
                 logout_user()
                 st.rerun()
         else:
-            if st.button("Login / Signup"):
+            if st.button("Login / Signup", key="nav_login_button"):
                 st.session_state["show_auth"] = True
                 st.rerun()
     
@@ -952,7 +955,7 @@ with st.sidebar:
         </p>
         """, unsafe_allow_html=True)
         
-        if st.button("Login / Sign Up", use_container_width=True):
+        if st.button("Login / Sign Up", use_container_width=True, key="sidebar_login_button"):
             st.session_state["show_auth"] = True
             st.rerun()
     
