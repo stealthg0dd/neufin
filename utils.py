@@ -33,11 +33,9 @@ def get_market_preferences():
             'selected_market': 'global',
             'show_global_insights': True,
             'show_us_insights': True,
-            'show_india_insights': True,
             'default_tickers': {
                 'global': ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META'],
-                'us': ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META'],
-                'india': ['RELIANCE.NS', 'TCS.NS', 'HDFCBANK.NS', 'INFY.NS', 'ICICIBANK.NS']
+                'us': ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META']
             }
         }
     return st.session_state.market_preferences

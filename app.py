@@ -742,8 +742,7 @@ with st.sidebar:
     
     market_options = {
         'global': '🌎 Global Markets',
-        'us': '🇺🇸 United States',
-        'india': '🇮🇳 India'
+        'us': '🇺🇸 United States'
     }
     
     selected_market = st.selectbox(
@@ -772,10 +771,7 @@ with st.sidebar:
     st.markdown('<p style="color: #AAA; font-size: 14px; margin-bottom: 5px;">Stocks & Indices</p>', unsafe_allow_html=True)
     
     # Get appropriate stocks based on market selection
-    if selected_market == 'india':
-        default_stocks = market_prefs['default_tickers']['india']
-        available_stocks = get_market_indices() + default_stocks
-    elif selected_market == 'us':
+    if selected_market == 'us':
         default_stocks = market_prefs['default_tickers']['us']
         available_stocks = get_market_indices() + default_stocks
     else:  # global
