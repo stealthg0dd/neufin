@@ -520,13 +520,19 @@ if "code" in st.query_params and "state" in st.query_params:
     state = st.query_params["state"]
     
     # Determine which OAuth provider to use based on the current URL path
-    current_url = st.query_params.get('_stcore_permalink', [''])[0]
+    # Try to parse the current URL or use other indicators to determine callback type
+    current_url = st.query_params.get('_stcore_permalink', '')
+    
+    # If we still can't determine, fall back to a simple check of query parameters
+    if not current_url:
+        current_url = ""
     
     # Store the callback path in session state
     if 'facebook_callback' in current_url:
         st.session_state['oauth_callback_path'] = 'facebook_callback'
     else:
-        st.session_state['oauth_callback_path'] = 'google_callback'
+        # Default to Google callback
+        st.session_state['oauth_callback_path'] = 'callback'  # Google uses /callback
     
     callback_path = st.session_state.get('oauth_callback_path', '')
     
@@ -534,8 +540,11 @@ if "code" in st.query_params and "state" in st.query_params:
         # Process Facebook callback
         success = handle_facebook_callback(state, code)
     else:
-        # Default to Google callback
+        # Use Google callback (default)
         success = handle_google_callback(state, code)
+        
+    # Log the authentication process for debugging
+    print(f"OAuth callback processed: {callback_path}, Success: {success}")
     
     # Clear query parameters to avoid processing callback twice
     st.query_params.clear()

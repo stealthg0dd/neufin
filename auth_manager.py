@@ -20,14 +20,48 @@ from database import (create_user, authenticate_user, get_user_subscription,
 # Google OAuth2 configuration
 GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
 GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
-GOOGLE_REDIRECT_URI = "https://neufin.repl.co/callback"  # Always use the correct Replit domain
+GOOGLE_REDIRECT_PATH = "/callback"  # Path component only
 GOOGLE_SCOPES = ['https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile']
 
 # Facebook OAuth configuration
 FACEBOOK_APP_ID = os.environ.get('FACEBOOK_APP_ID', '')
 FACEBOOK_APP_SECRET = os.environ.get('FACEBOOK_APP_SECRET', '')
-FACEBOOK_REDIRECT_URI = "https://neufin.repl.co/facebook_callback"
+FACEBOOK_REDIRECT_PATH = "/facebook_callback"  # Path component only
 FACEBOOK_SCOPES = ['email', 'public_profile']
+
+# Function to get the base URL from Streamlit runtime config
+def get_base_url():
+    # Default to localhost
+    base_url = "http://localhost:5000"
+    try:
+        # Import internal Streamlit functionality or check environment variables
+        # This may change with Streamlit versions, so we provide fallbacks
+        import streamlit as st
+        if hasattr(st, "get_option") and callable(st.get_option):
+            server_options = st.get_option("server")
+            if server_options and "baseUrlPath" in server_options:
+                base_path = server_options["baseUrlPath"]
+                if base_path:
+                    # Remove trailing slash if present
+                    if base_path.endswith("/"):
+                        base_path = base_path[:-1]
+                    base_url = f"https://{base_path}"
+        
+        # Check for Replit specific environment variables
+        if os.environ.get("REPL_SLUG") and os.environ.get("REPL_OWNER"):
+            slug = os.environ.get("REPL_SLUG")
+            owner = os.environ.get("REPL_OWNER")
+            base_url = f"https://{slug}.{owner}.repl.co"
+        
+        # For Replit deployments
+        if os.environ.get("REPLIT_DEPLOYMENT_URL"):
+            base_url = os.environ.get("REPLIT_DEPLOYMENT_URL")
+        
+    except Exception:
+        # Fallback to safe default
+        pass
+        
+    return base_url
 
 # Session state keys
 USER_SESSION_KEY = "neufin_user"
@@ -107,6 +141,13 @@ def logout_user():
     
 def init_google_oauth():
     """Initialize Google OAuth flow"""
+    # Get dynamic base URL
+    base_url = get_base_url()
+    google_redirect_uri = f"{base_url}{GOOGLE_REDIRECT_PATH}"
+    
+    # Store the redirect URI in session state for callback verification
+    st.session_state['google_redirect_uri'] = google_redirect_uri
+    
     flow = google_auth_oauthlib.flow.Flow.from_client_config(
         {
             "web": {
@@ -114,12 +155,12 @@ def init_google_oauth():
                 "client_secret": GOOGLE_CLIENT_SECRET,
                 "auth_uri": "https://accounts.google.com/o/oauth2/auth",
                 "token_uri": "https://oauth2.googleapis.com/token",
-                "redirect_uris": [GOOGLE_REDIRECT_URI]
+                "redirect_uris": [google_redirect_uri]
             }
         },
         scopes=GOOGLE_SCOPES
     )
-    flow.redirect_uri = GOOGLE_REDIRECT_URI
+    flow.redirect_uri = google_redirect_uri
     
     # Generate a secure state token
     state_token = secrets.token_urlsafe(16)
@@ -137,12 +178,19 @@ def init_google_oauth():
 
 def init_facebook_oauth():
     """Initialize Facebook OAuth flow"""
+    # Get dynamic base URL
+    base_url = get_base_url()
+    facebook_redirect_uri = f"{base_url}{FACEBOOK_REDIRECT_PATH}"
+    
+    # Store the redirect URI in session state for callback verification
+    st.session_state['facebook_redirect_uri'] = facebook_redirect_uri
+    
     # Generate a secure state token
     state_token = secrets.token_urlsafe(16)
     st.session_state['fb_oauth_state'] = state_token
     
     # Construct the Facebook OAuth URL
-    auth_url = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&state={state_token}&scope={','.join(FACEBOOK_SCOPES)}"
+    auth_url = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={facebook_redirect_uri}&state={state_token}&scope={','.join(FACEBOOK_SCOPES)}"
     
     return auth_url
 
@@ -153,9 +201,16 @@ def handle_facebook_callback(state, code):
         st.session_state[AUTH_MESSAGE_KEY] = "Invalid state parameter. Authentication failed."
         return False
     
+    # Get the redirect URI from session state
+    facebook_redirect_uri = st.session_state.get('facebook_redirect_uri')
+    if not facebook_redirect_uri:
+        # Fallback to constructing it
+        base_url = get_base_url()
+        facebook_redirect_uri = f"{base_url}{FACEBOOK_REDIRECT_PATH}"
+        
     try:
         # Exchange code for access token
-        token_url = f"https://graph.facebook.com/v12.0/oauth/access_token?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&client_secret={FACEBOOK_APP_SECRET}&code={code}"
+        token_url = f"https://graph.facebook.com/v12.0/oauth/access_token?client_id={FACEBOOK_APP_ID}&redirect_uri={facebook_redirect_uri}&client_secret={FACEBOOK_APP_SECRET}&code={code}"
         token_response = requests.get(token_url)
         token_data = token_response.json()
         
@@ -217,6 +272,13 @@ def handle_google_callback(state, code):
     if state != st.session_state.get('oauth_state'):
         st.session_state[AUTH_MESSAGE_KEY] = "Invalid state parameter. Authentication failed."
         return False
+    
+    # Get the redirect URI from session state
+    google_redirect_uri = st.session_state.get('google_redirect_uri')
+    if not google_redirect_uri:
+        # Fallback to constructing it
+        base_url = get_base_url()
+        google_redirect_uri = f"{base_url}{GOOGLE_REDIRECT_PATH}"
         
     try:
         flow = google_auth_oauthlib.flow.Flow.from_client_config(
@@ -226,13 +288,13 @@ def handle_google_callback(state, code):
                     "client_secret": GOOGLE_CLIENT_SECRET,
                     "auth_uri": "https://accounts.google.com/o/oauth2/auth",
                     "token_uri": "https://oauth2.googleapis.com/token",
-                    "redirect_uris": [GOOGLE_REDIRECT_URI]
+                    "redirect_uris": [google_redirect_uri]
                 }
             },
             scopes=GOOGLE_SCOPES,
             state=state
         )
-        flow.redirect_uri = GOOGLE_REDIRECT_URI
+        flow.redirect_uri = google_redirect_uri
         
         # Exchange authorization code for tokens
         flow.fetch_token(code=code)
