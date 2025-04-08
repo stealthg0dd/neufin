@@ -471,10 +471,20 @@ def generate_sentiment_insights(sentiment_df):
     return st.session_state.ai_insights
 
 # Helper function to show upgrade prompt for premium features
-def show_upgrade_prompt(feature_name, subscription_level="premium"):
-    """Display an upgrade prompt for premium features"""
-    # Generate unique button keys based on feature name to avoid duplicate IDs
+def show_upgrade_prompt(feature_name, subscription_level="premium", location_id=None):
+    """
+    Display an upgrade prompt for premium features
+    
+    Args:
+        feature_name (str): Name of the feature requiring upgrade
+        subscription_level (str): Subscription level needed ('basic', 'premium', etc.)
+        location_id (str, optional): Additional identifier to ensure unique button keys
+                                     when the same feature appears in different UI sections
+    """
+    # Generate unique button keys based on feature name and location to avoid duplicate IDs
     feature_key = feature_name.lower().replace(" ", "_").replace("-", "_")
+    if location_id:
+        feature_key = f"{feature_key}_{location_id}"
     
     st.info(f"💎 **{feature_name}** is a {subscription_level.capitalize()} feature. Please subscribe to access it.")
     
@@ -2386,7 +2396,8 @@ def load_dashboard():
         st.markdown('<div class="neufin-card premium-features">', unsafe_allow_html=True)
         show_upgrade_prompt(
             feature_name="Historical Sentiment Trend Analysis", 
-            subscription_level="basic"
+            subscription_level="basic",
+            location_id="sentiment_dashboard"
         )
         st.markdown('</div>', unsafe_allow_html=True)
         
@@ -2819,7 +2830,7 @@ with recommendation_tab:
             st.error(f"Error generating investment recommendations: {str(e)}")
     else:
         # Show upgrade message for premium feature
-        show_upgrade_prompt("AI-Powered Investment Recommendations", "basic")
+        show_upgrade_prompt("AI-Powered Investment Recommendations", "basic", "investment_tab")
 
 with sector_tab:
     st.markdown('<h3 style="color: #7B68EE;">Detailed Sector Insights</h3>', unsafe_allow_html=True)
@@ -2984,7 +2995,7 @@ with sector_tab:
             st.error(f"Error generating sector insights: {str(e)}")
     else:
         # Show upgrade message for premium feature
-        show_upgrade_prompt("Detailed Sector Insights", "basic")
+        show_upgrade_prompt("Detailed Sector Insights", "basic", "sector_tab")
 
 with global_tab:
     st.markdown('<h3 style="color: #7B68EE;">Global Trade Impact Analysis</h3>', unsafe_allow_html=True)
@@ -3107,7 +3118,7 @@ with global_tab:
             st.error(f"Error analyzing global trade conditions: {str(e)}")
     else:
         # Show upgrade message for premium feature
-        show_upgrade_prompt("Global Trade Impact Analysis", "premium")
+        show_upgrade_prompt("Global Trade Impact Analysis", "premium", "global_tab")
 
 # Close the premium features container
 st.markdown('</div>', unsafe_allow_html=True)
