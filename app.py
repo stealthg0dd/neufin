@@ -844,13 +844,13 @@ st.markdown("""
     }
     
     @keyframes pulse {
-        0% {
+        "0%" {
             box-shadow: 0 0 0 0 rgba(123, 104, 238, 0.4);
         }
-        70% {
+        "70%" {
             box-shadow: 0 0 0 6px rgba(123, 104, 238, 0);
         }
-        100% {
+        "100%" {
             box-shadow: 0 0 0 0 rgba(123, 104, 238, 0);
         }
     }
@@ -889,29 +889,138 @@ if 'last_auto_refresh' not in st.session_state:
 if 'show_demo' not in st.session_state:
     st.session_state.show_demo = False
 
-# Main title with futuristic styling
+# Main title with enhanced futuristic styling and animated elements
 # Add real-time badge if auto-refresh is enabled
 real_time_badge = """<span class="real-time-badge">🔄 REAL-TIME</span>""" if st.session_state.auto_refresh else ""
 st.markdown(f"""
-<div class="neufin-headline">
+<div class="neufin-headline animated">
+    <div class="headline-glow"></div>
     <h1 class="glow-text">🔮 NEUFIN {real_time_badge}</h1>
     <h3>The Future of Financial Intelligence</h3>
     <p style="color:#CCC">Advanced AI-Powered Market Analytics Platform</p>
+    <div class="pulse-circle"></div>
 </div>
+
+<style>
+    .animated .headline-glow {
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(123, 104, 238, 0.1) 0%, transparent 70%);
+        animation: rotate 15s infinite linear;
+    }
+    
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    .pulse-circle {
+        position: absolute;
+        bottom: -30px;
+        right: 30px;
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        background-color: #7B68EE;
+        box-shadow: 0 0 20px #7B68EE;
+        animation: pulse-animation 2s infinite;
+    }
+    
+    @keyframes pulse-animation {
+        0% { box-shadow: 0 0 0 0 rgba(123, 104, 238, 0.7); }
+        70% { box-shadow: 0 0 0 15px rgba(123, 104, 238, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(123, 104, 238, 0); }
+    }
+</style>
 """, unsafe_allow_html=True)
 
-# Introduction with futuristic design
+# Enhanced introduction with feature highlights
 st.markdown("""
 <div class="neufin-card">
-    <p style="font-size:18px; margin-bottom:20px;">
-        <span style="color:#7B68EE; font-weight:bold;">Welcome to Neufin</span> - Where AI meets Finance.
-    </p>
-    <p>
-        Our cutting-edge neural networks continuously analyze market data, global news, and trading patterns to deliver 
-        predictive insights with unprecedented accuracy. Navigate the complexities of today's markets with 
-        our advanced toolset designed for the modern investor.
-    </p>
+    <div class="intro-container">
+        <div class="intro-text">
+            <p style="font-size:20px; margin-bottom:20px;">
+                <span style="color:#7B68EE; font-weight:bold; display:inline-block; border-bottom: 2px solid #7B68EE; padding-bottom:5px;">Welcome to Neufin</span> 
+                <span style="font-style:italic; color:#CCC; font-size:16px;">Where AI meets Finance</span>
+            </p>
+            <p style="margin-bottom:15px;">
+                Our cutting-edge neural networks continuously analyze market data, global news, and trading patterns to deliver 
+                predictive insights with unprecedented accuracy.
+            </p>
+            <p style="font-size:14px; color:#AAA; line-height:1.6;">
+                Navigate the complexities of today's markets with our advanced toolset designed for the modern investor.
+            </p>
+        </div>
+        <div class="feature-highlights">
+            <div class="feature-item">
+                <div class="feature-icon">📊</div>
+                <div class="feature-title">AI-Powered Analysis</div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">🔍</div>
+                <div class="feature-title">Sentiment Tracking</div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">💰</div>
+                <div class="feature-title">Investment Insights</div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">🌐</div>
+                <div class="feature-title">Global Markets</div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<style>
+    .intro-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+    
+    .intro-text {
+        flex: 3;
+        min-width: 300px;
+    }
+    
+    .feature-highlights {
+        flex: 2;
+        min-width: 250px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+    
+    .feature-item {
+        background: rgba(30, 30, 46, 0.7);
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(123, 104, 238, 0.1);
+    }
+    
+    .feature-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(123, 104, 238, 0.2);
+        border: 1px solid rgba(123, 104, 238, 0.5);
+    }
+    
+    .feature-icon {
+        font-size: 24px;
+        margin-bottom: 8px;
+    }
+    
+    .feature-title {
+        font-size: 14px;
+        color: #E0E0E0;
+        font-weight: 500;
+    }
+</style>
 """, unsafe_allow_html=True)
 
 # Sidebar for filters, inputs, and account features
@@ -1838,25 +1947,80 @@ def load_dashboard():
     }
     market_indicator = market_indicators.get(selected_market, '🌎 Global Markets')
     
-    # Overall Market Sentiment Card
+    # Enhanced Market Sentiment Section - Card with multiple widgets
     st.markdown('<div class="neufin-card">', unsafe_allow_html=True)
     
-    # Market region display at the top
+    # Enhanced header with market region and time period
     st.markdown(f"""
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <h3 style="color: #7B68EE; margin: 0;">Overall Market Sentiment</h3>
-        <div style="background-color: rgba(123, 104, 238, 0.1); padding: 5px 10px; border-radius: 4px; 
-                    border: 1px solid rgba(123, 104, 238, 0.3);">
-            <span style="color: #E0E0E0; font-size: 14px;">{market_indicator}</span>
+        <div class="header-with-badge">
+            <h3 style="color: #7B68EE; margin: 0; display: inline-flex; align-items: center;">
+                Market Pulse Dashboard
+                <span class="pulse-dot"></span>
+            </h3>
+            <span style="font-size: 12px; color: #AAA; margin-left: 5px;">Sentiment | Trends | Analysis</span>
+        </div>
+        <div class="market-badge">
+            <div class="market-badge-icon">{market_indicator.split()[0]}</div>
+            <div class="market-badge-text">{' '.join(market_indicator.split()[1:])}</div>
         </div>
     </div>
+    
+    <style>
+        .header-with-badge {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #7B68EE;
+            border-radius: 50%;
+            margin-left: 8px;
+            position: relative;
+            display: inline-block;
+            animation: pulse-dot 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+        }
+        
+        @keyframes pulse-dot {
+            0% { transform: scale(0.8); opacity: 0.7; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0.7; }
+        }
+        
+        .market-badge {
+            display: flex;
+            align-items: center;
+            background-color: rgba(123, 104, 238, 0.15);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(123, 104, 238, 0.3);
+        }
+        
+        .market-badge-icon {
+            font-size: 16px;
+            margin-right: 8px;
+        }
+        
+        .market-badge-text {
+            color: #E0E0E0;
+            font-size: 14px;
+            font-weight: 500;
+        }
+    </style>
     """, unsafe_allow_html=True)
     
-    col1, col2 = st.columns([2, 1])
+    # Create a tabbed interface for different sentiment views
+    sentiment_view_tabs = st.tabs(["Market Overview", "Stock Sentiment", "Sector Analysis"])
     
-    with col1:
-        # Add real-time indicator to headings if auto-refresh is enabled
-        real_time_indicator = """<span class="real-time-badge" style="font-size:10px; background-color: rgba(76, 175, 80, 0.2); color: #4CAF50; padding: 3px 6px; border-radius: 4px; margin-left: 8px; border: 1px solid rgba(76, 175, 80, 0.3);">🔄 LIVE</span>""" if st.session_state.auto_refresh else ""
+    # Tab 1: Market Overview
+    with sentiment_view_tabs[0]:
+        col1, col2 = st.columns([2, 1])
+        
+        with col1:
+            # Add real-time indicator to headings if auto-refresh is enabled
+            real_time_indicator = """<span class="real-time-badge" style="font-size:10px; background-color: rgba(76, 175, 80, 0.2); color: #4CAF50; padding: 3px 6px; border-radius: 4px; margin-left: 8px; border: 1px solid rgba(76, 175, 80, 0.3);">🔄 LIVE</span>""" if st.session_state.auto_refresh else ""
         
         try:
             # Fetch major index data for overall market sentiment
@@ -1910,14 +2074,13 @@ def load_dashboard():
         except Exception as e:
             st.error(f"Error analyzing market sentiment: {str(e)}")
     
-    with col2:
-        # Add AI indicator to news heading for premium users
-        ai_indicator = """<span style="font-size: 12px; background-color: rgba(76, 175, 80, 0.2); color: #4CAF50; padding: 3px 6px; border-radius: 4px; margin-left: 8px; border: 1px solid rgba(76, 175, 80, 0.3);">AI POWERED</span>""" if check_feature_access('premium') else ""
+        with col2:
+            # Add AI indicator to news heading for premium users
+            ai_indicator = """<span style="font-size: 12px; background-color: rgba(76, 175, 80, 0.2); color: #4CAF50; padding: 3px 6px; border-radius: 4px; margin-left: 8px; border: 1px solid rgba(76, 175, 80, 0.3);">AI POWERED</span>""" if check_feature_access('premium') else ""
         
-        # Add real-time indicator to news sentiment heading if auto-refresh is enabled
-        st.markdown(f'<h3 style="color: #7B68EE; margin-bottom: 15px;">Personalized Financial News {real_time_indicator} {ai_indicator}</h3>', unsafe_allow_html=True)
+            # Add real-time indicator to news sentiment heading if auto-refresh is enabled
+            st.markdown(f'<h3 style="color: #7B68EE; margin-bottom: 15px;">Personalized Financial News {real_time_indicator} {ai_indicator}</h3>', unsafe_allow_html=True)
         
-        try:
             with st.spinner("Loading personalized news..."):
                 # Get user ID if logged in, otherwise use None for general recommendations
                 user_id = st.session_state.get('user_id') if 'user_id' in st.session_state else None
@@ -1928,62 +2091,62 @@ def load_dashboard():
                 # Get recommended news - use basic recommendations for free tier, 
                 # personalized with sentiment for premium
                 use_advanced_sentiment = check_feature_access('premium') and USE_ADVANCED_AI
+            
+            if check_feature_access('basic'):
+                # For basic or premium: Show recommended news with relevance for user
+                recommended_news = news_recommender.get_recommendations(
+                    limit=5,
+                    include_sentiment=True
+                )
                 
-                if check_feature_access('basic'):
-                    # For basic or premium: Show recommended news with relevance for user
-                    recommended_news = news_recommender.get_recommendations(
-                        limit=5,
-                        include_sentiment=True
-                    )
-                    
-                    if recommended_news and len(recommended_news) > 0:
-                        # Display news with fancy cards
-                        for i, news in enumerate(recommended_news):
-                            # Show relevance score for premium users
-                            show_relevance = check_feature_access('premium')
-                            
-                            # Render HTML for news card
-                            news_html = format_news_card(
-                                news,
-                                show_relevance=show_relevance,
-                                show_sentiment=True
-                            )
-                            st.markdown(news_html, unsafe_allow_html=True)
-                            
-                            # Add "Related News" expander for premium users
-                            if check_feature_access('premium') and 'id' in news:
-                                with st.expander("Related News"):
-                                    related_news = news_recommender.get_related_news(news['id'], limit=3)
-                                    if related_news and len(related_news) > 0:
-                                        for related in related_news:
-                                            related_html = format_news_card(
-                                                related,
-                                                show_relevance=False,
-                                                show_sentiment=True
-                                            )
-                                            st.markdown(related_html, unsafe_allow_html=True)
-                                    else:
-                                        st.info("No related news found.")
-                    else:
-                        st.info("No financial news available at the moment.")
+                if recommended_news and len(recommended_news) > 0:
+                    # Display news with fancy cards
+                    for i, news in enumerate(recommended_news):
+                        # Show relevance score for premium users
+                        show_relevance = check_feature_access('premium')
                         
-                    # For premium users, show information about how news is personalized
-                    if check_feature_access('premium'):
-                        with st.expander("About Personalized News"):
-                            st.markdown("""
-                            <div style="color: #CCCCCC; font-size: 14px;">
-                                <p><strong>How News Personalization Works:</strong></p>
-                                <p>Our AI-driven news engine analyzes your favorites, watched stocks, and reading patterns 
-                                to recommend the most relevant financial news. News relevance is calculated using:</p>
-                                <ul>
-                                    <li>Content matching with your investment interests</li>
-                                    <li>Sentiment analysis for emotional tone</li>
-                                    <li>Keyword extraction for topic relevance</li>
-                                    <li>Reading patterns and similar users' interests</li>
-                                </ul>
-                                <p>The stars indicate how closely the news aligns with your investment profile.</p>
-                            </div>
-                            """, unsafe_allow_html=True)
+                        # Render HTML for news card
+                        news_html = format_news_card(
+                            news,
+                            show_relevance=show_relevance,
+                            show_sentiment=True
+                        )
+                        st.markdown(news_html, unsafe_allow_html=True)
+                        
+                        # Add "Related News" expander for premium users
+                        if check_feature_access('premium') and 'id' in news:
+                            with st.expander("Related News"):
+                                related_news = news_recommender.get_related_news(news['id'], limit=3)
+                                if related_news and len(related_news) > 0:
+                                    for related in related_news:
+                                        related_html = format_news_card(
+                                            related,
+                                            show_relevance=False,
+                                            show_sentiment=True
+                                        )
+                                        st.markdown(related_html, unsafe_allow_html=True)
+                                else:
+                                    st.info("No related news found.")
+                else:
+                    st.info("No financial news available at the moment.")
+                    
+                # For premium users, show information about how news is personalized
+                if check_feature_access('premium'):
+                    with st.expander("About Personalized News"):
+                        st.markdown("""
+                        <div style="color: #CCCCCC; font-size: 14px;">
+                            <p><strong>How News Personalization Works:</strong></p>
+                            <p>Our AI-driven news engine analyzes your favorites, watched stocks, and reading patterns 
+                            to recommend the most relevant financial news. News relevance is calculated using:</p>
+                            <ul>
+                                <li>Content matching with your investment interests</li>
+                                <li>Sentiment analysis for emotional tone</li>
+                                <li>Keyword extraction for topic relevance</li>
+                                <li>Reading patterns and similar users' interests</li>
+                            </ul>
+                            <p>The stars indicate how closely the news aligns with your investment profile.</p>
+                        </div>
+                        """, unsafe_allow_html=True)
                 else:
                     # For free tier: Show basic market news without fancy styling
                     market_news = fetch_market_news(market=selected_market)
