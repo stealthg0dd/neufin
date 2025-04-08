@@ -20,8 +20,14 @@ from database import (create_user, authenticate_user, get_user_subscription,
 # Google OAuth2 configuration
 GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
 GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
-GOOGLE_REDIRECT_URI = "http://localhost:5000/callback"  # In production, this should be your domain
+GOOGLE_REDIRECT_URI = "https://neufin.repl.co/callback"  # Always use the correct Replit domain
 GOOGLE_SCOPES = ['https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile']
+
+# Facebook OAuth configuration
+FACEBOOK_APP_ID = os.environ.get('FACEBOOK_APP_ID', '')
+FACEBOOK_APP_SECRET = os.environ.get('FACEBOOK_APP_SECRET', '')
+FACEBOOK_REDIRECT_URI = "https://neufin.repl.co/facebook_callback"
+FACEBOOK_SCOPES = ['email', 'public_profile']
 
 # Session state keys
 USER_SESSION_KEY = "neufin_user"
@@ -128,6 +134,79 @@ def init_google_oauth():
     )
     
     return authorization_url
+
+def init_facebook_oauth():
+    """Initialize Facebook OAuth flow"""
+    # Generate a secure state token
+    state_token = secrets.token_urlsafe(16)
+    st.session_state['fb_oauth_state'] = state_token
+    
+    # Construct the Facebook OAuth URL
+    auth_url = f"https://www.facebook.com/v12.0/dialog/oauth?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&state={state_token}&scope={','.join(FACEBOOK_SCOPES)}"
+    
+    return auth_url
+
+def handle_facebook_callback(state, code):
+    """Handle Facebook OAuth callback"""
+    # Verify state matches to prevent CSRF
+    if state != st.session_state.get('fb_oauth_state'):
+        st.session_state[AUTH_MESSAGE_KEY] = "Invalid state parameter. Authentication failed."
+        return False
+    
+    try:
+        # Exchange code for access token
+        token_url = f"https://graph.facebook.com/v12.0/oauth/access_token?client_id={FACEBOOK_APP_ID}&redirect_uri={FACEBOOK_REDIRECT_URI}&client_secret={FACEBOOK_APP_SECRET}&code={code}"
+        token_response = requests.get(token_url)
+        token_data = token_response.json()
+        
+        if 'error' in token_data:
+            st.session_state[AUTH_MESSAGE_KEY] = f"Facebook authentication error: {token_data['error']['message']}"
+            return False
+        
+        access_token = token_data.get('access_token')
+        
+        # Get user info
+        user_info_url = f"https://graph.facebook.com/me?fields=id,name,email&access_token={access_token}"
+        userinfo_response = requests.get(user_info_url)
+        userinfo = userinfo_response.json()
+        
+        if 'error' in userinfo:
+            st.session_state[AUTH_MESSAGE_KEY] = f"Error getting Facebook user info: {userinfo['error']['message']}"
+            return False
+        
+        # Get or create user
+        email = userinfo.get('email')
+        if not email:
+            st.session_state[AUTH_MESSAGE_KEY] = "Your Facebook account does not have an email address or hasn't granted access to it."
+            return False
+            
+        name = userinfo.get('name', email.split('@')[0])
+        
+        # Check if user exists
+        session = get_db_session()
+        user = session.query(User).filter_by(email=email).first()
+        
+        if not user:
+            # Create new user with random password
+            random_password = secrets.token_urlsafe(16)
+            user = create_user(name, email, random_password)
+            
+        # Login user
+        st.session_state[USER_SESSION_KEY] = {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "created_at": user.created_at.isoformat() if user.created_at else None,
+            "last_login": datetime.now().isoformat(),
+            "oauth_provider": "facebook"
+        }
+        st.session_state[AUTH_STATUS_KEY] = True
+        st.session_state[AUTH_MESSAGE_KEY] = f"Welcome, {name}! You've successfully signed in with Facebook."
+        
+        return True
+    except Exception as e:
+        st.session_state[AUTH_MESSAGE_KEY] = f"Error during Facebook authentication: {str(e)}"
+        return False
 
 def handle_google_callback(state, code):
     """Handle Google OAuth callback"""
@@ -248,7 +327,7 @@ def show_login_ui():
         
         if submit:
             if login_user(email, password):
-                st.experimental_rerun()
+                st.rerun()
     
     with col2:
         st.subheader("Register")
@@ -263,24 +342,41 @@ def show_login_ui():
             if password != confirm_password:
                 st.error("Passwords do not match!")
             elif register_user(username, email, password):
-                st.experimental_rerun()
+                st.rerun()
                 
-    # Google login
+    # Social login options
     st.markdown("---")
     st.subheader("Or sign in with:")
     
-    if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
-        google_auth_url = init_google_oauth()
-        st.markdown(f"""
-        <a href="{google_auth_url}" target="_self">
-            <div style="background-color:#4285F4; color:white; padding:8px 16px; border-radius:4px; display:inline-flex; align-items:center; cursor:pointer;">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" style="height:24px; margin-right:8px;">
-                Sign in with Google
-            </div>
-        </a>
-        """, unsafe_allow_html=True)
-    else:
-        st.info("Google authentication is not configured. Contact the administrator.")
+    social_cols = st.columns(2)
+    
+    with social_cols[0]:
+        if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
+            google_auth_url = init_google_oauth()
+            st.markdown(f"""
+            <a href="{google_auth_url}" target="_self">
+                <div style="background-color:#4285F4; color:white; padding:8px 16px; border-radius:4px; display:inline-flex; align-items:center; cursor:pointer;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" style="height:24px; margin-right:8px;">
+                    Sign in with Google
+                </div>
+            </a>
+            """, unsafe_allow_html=True)
+        else:
+            st.info("Google authentication is not configured.")
+    
+    with social_cols[1]:
+        if FACEBOOK_APP_ID and FACEBOOK_APP_SECRET:
+            facebook_auth_url = init_facebook_oauth()
+            st.markdown(f"""
+            <a href="{facebook_auth_url}" target="_self">
+                <div style="background-color:#1877F2; color:white; padding:8px 16px; border-radius:4px; display:inline-flex; align-items:center; cursor:pointer;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c2/F_icon.svg" style="height:24px; margin-right:8px;">
+                    Sign in with Facebook
+                </div>
+            </a>
+            """, unsafe_allow_html=True)
+        else:
+            st.info("Facebook authentication is not configured.")
         
     # Display any authentication messages
     auth_message = st.session_state.get(AUTH_MESSAGE_KEY)
@@ -374,7 +470,7 @@ def show_user_profile_ui():
                             # Redirect to payment page
                             st.session_state["redirect_to_payment"] = True
                             st.session_state["payment_plan"] = "premium"
-                            st.experimental_rerun()
+                            st.rerun()
             else:
                 st.write("You don't have an active subscription.")
                 
@@ -458,7 +554,7 @@ def start_free_trial(user_id):
     )
     
     st.success("Your 14-day free trial has been activated!")
-    st.experimental_rerun()
+    st.rerun()
 
 # Run this when the module is imported
 init_auth_session()

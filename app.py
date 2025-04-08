@@ -31,8 +31,9 @@ from news_recommender import NewsRecommender, format_news_card
 from auth_manager import (
     init_auth_session, is_authenticated, get_current_user, 
     login_user, register_user, logout_user, init_google_oauth,
-    handle_google_callback, user_has_permission, require_login,
-    require_permission, show_login_ui, show_user_profile_ui, start_free_trial
+    handle_google_callback, handle_facebook_callback, init_facebook_oauth,
+    user_has_permission, require_login, require_permission, 
+    show_login_ui, show_user_profile_ui, start_free_trial
 )
 from subscription_manager import (
     create_checkout_session, handle_subscription_webhook,
@@ -518,8 +519,23 @@ if "code" in st.query_params and "state" in st.query_params:
     code = st.query_params["code"]
     state = st.query_params["state"]
     
-    # Process the callback
-    success = handle_google_callback(state, code)
+    # Determine which OAuth provider to use based on the current URL path
+    current_url = st.query_params.get('_stcore_permalink', [''])[0]
+    
+    # Store the callback path in session state
+    if 'facebook_callback' in current_url:
+        st.session_state['oauth_callback_path'] = 'facebook_callback'
+    else:
+        st.session_state['oauth_callback_path'] = 'google_callback'
+    
+    callback_path = st.session_state.get('oauth_callback_path', '')
+    
+    if callback_path == 'facebook_callback':
+        # Process Facebook callback
+        success = handle_facebook_callback(state, code)
+    else:
+        # Default to Google callback
+        success = handle_google_callback(state, code)
     
     # Clear query parameters to avoid processing callback twice
     st.query_params.clear()
@@ -2176,7 +2192,7 @@ def load_dashboard():
         st.markdown('<div class="neufin-card premium-features">', unsafe_allow_html=True)
         show_upgrade_prompt(
             feature_name="Historical Sentiment Trend Analysis", 
-            required_plan="basic"
+            subscription_level="basic"
         )
         st.markdown('</div>', unsafe_allow_html=True)
         
