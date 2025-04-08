@@ -33,37 +33,57 @@ FACEBOOK_SCOPES = ['email', 'public_profile']
 
 # Function to get the base URL from Streamlit runtime config
 def get_base_url():
+    """
+    Get the base URL for the application, making sure it works in various environments
+    including Replit and local development.
+    
+    Returns:
+        str: The complete base URL including protocol (e.g., https://myapp.repl.co)
+    """
     # Default to localhost
     base_url = "http://localhost:5000"
     try:
-        # Import internal Streamlit functionality or check environment variables
-        # This may change with Streamlit versions, so we provide fallbacks
-        import streamlit as st
-        if hasattr(st, "get_option") and callable(st.get_option):
-            server_options = st.get_option("server")
-            if server_options and "baseUrlPath" in server_options:
-                base_path = server_options["baseUrlPath"]
-                if base_path:
-                    # Remove trailing slash if present
-                    if base_path.endswith("/"):
-                        base_path = base_path[:-1]
-                    base_url = f"https://{base_path}"
-        
-        # Check for Replit specific environment variables
+        # Check for Replit environment variables first (most reliable for Replit)
         if os.environ.get("REPL_SLUG") and os.environ.get("REPL_OWNER"):
             slug = os.environ.get("REPL_SLUG")
             owner = os.environ.get("REPL_OWNER")
             base_url = f"https://{slug}.{owner}.repl.co"
+            print(f"Using Replit environment URL: {base_url}")
+            return base_url
         
         # For Replit deployments
         if os.environ.get("REPLIT_DEPLOYMENT_URL"):
             base_url = os.environ.get("REPLIT_DEPLOYMENT_URL")
+            print(f"Using Replit deployment URL: {base_url}")
+            return base_url
         
-    except Exception:
+        # Try Streamlit internal options as fallback
+        import streamlit as st
+        if hasattr(st, "get_option") and callable(st.get_option):
+            server_options = st.get_option("server")
+            if server_options:
+                # Try to get port and server headless status
+                port = server_options.get("port", 5000)
+                headless = server_options.get("headless", False)
+                
+                if headless:
+                    # In headless mode, likely running on a server
+                    base_url = f"https://{os.environ.get('REPLIT_SLUG', 'localhost')}.repl.co"
+                else:
+                    # Local development
+                    base_url = f"http://localhost:{port}"
+        
+        # Final safety check - ensure URL doesn't end with slash
+        if base_url.endswith('/'):
+            base_url = base_url[:-1]
+            
+        print(f"Using base URL: {base_url}")
+        return base_url
+        
+    except Exception as e:
+        print(f"Error determining base URL: {str(e)}, using default: {base_url}")
         # Fallback to safe default
-        pass
-        
-    return base_url
+        return base_url
 
 # Session state keys
 USER_SESSION_KEY = "neufin_user"
@@ -152,6 +172,12 @@ def handle_google_identity_token(credential):
         bool: True if authentication was successful, False otherwise
     """
     try:
+        # Log the credential for debugging (truncated for security)
+        if credential and len(credential) > 20:
+            print(f"Processing Google credential: {credential[:10]}...{credential[-10:]}")
+        else:
+            print("Warning: Empty or invalid Google credential received")
+            
         # Verify the token
         idinfo = id_token.verify_oauth2_token(
             credential, 
@@ -159,23 +185,30 @@ def handle_google_identity_token(credential):
             GOOGLE_CLIENT_ID
         )
         
+        # Log successful verification
+        print(f"Google token verified successfully. Issuer: {idinfo.get('iss', 'unknown')}")
+        
         # Check issuer
         if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
             st.session_state[AUTH_MESSAGE_KEY] = "Invalid token issuer."
+            print(f"Invalid token issuer: {idinfo['iss']}")
             return False
             
         # Get user info
         email = idinfo.get('email')
         if not email:
             st.session_state[AUTH_MESSAGE_KEY] = "No email address associated with this Google account."
+            print("Error: No email address in Google profile")
             return False
             
         email_verified = idinfo.get('email_verified', False)
         if not email_verified:
             st.session_state[AUTH_MESSAGE_KEY] = "Email address not verified by Google."
+            print(f"Error: Email {email} not verified by Google")
             return False
             
         name = idinfo.get('name', email.split('@')[0])
+        print(f"Google authentication successful for: {email}")
         
         # Check if user exists
         session = get_db_session()
@@ -184,9 +217,11 @@ def handle_google_identity_token(credential):
         if not user:
             # Create new user with random password
             random_password = secrets.token_urlsafe(16)
+            print(f"Creating new user account for Google user: {email}")
             user, error = create_user(name, email, random_password)
             if not user:
                 st.session_state[AUTH_MESSAGE_KEY] = error or "Error creating user account. Please try again."
+                print(f"Failed to create user account: {error}")
                 return False
             
         # Login user
@@ -200,14 +235,19 @@ def handle_google_identity_token(credential):
         }
         st.session_state[AUTH_STATUS_KEY] = True
         st.session_state[AUTH_MESSAGE_KEY] = f"Welcome, {name}! You've successfully signed in with Google."
+        print(f"Google authentication completed successfully for: {email}")
         
         return True
     except ValueError as e:
         # Invalid token
-        st.session_state[AUTH_MESSAGE_KEY] = f"Invalid token: {str(e)}"
+        error_msg = f"Invalid Google token: {str(e)}"
+        print(error_msg)
+        st.session_state[AUTH_MESSAGE_KEY] = error_msg
         return False
     except Exception as e:
-        st.session_state[AUTH_MESSAGE_KEY] = f"Error during Google authentication: {str(e)}"
+        error_msg = f"Error during Google authentication: {str(e)}"
+        print(error_msg)
+        st.session_state[AUTH_MESSAGE_KEY] = error_msg
         return False
     
 def init_google_oauth():
@@ -496,14 +536,18 @@ def show_login_ui():
     # Add Google Identity Services scripts
     if GOOGLE_CLIENT_ID:
         base_url = get_base_url()
-        callback_path = "/auth/google"  # New callback path specifically for Google Identity Services
         
+        # Make sure we create a component key for handling credential response
+        if "google_credential" not in st.session_state:
+            st.session_state.google_credential = None
+            
         st.markdown(f"""
         <script src="https://accounts.google.com/gsi/client" async defer></script>
         <div id="g_id_onload"
             data-client_id="{GOOGLE_CLIENT_ID}"
             data-context="signin"
-            data-ux_mode="popup"
+            data-ux_mode="redirect"
+            data-login_uri="{base_url}"
             data-callback="handleCredentialResponse"
             data-auto_prompt="false">
         </div>
@@ -512,7 +556,7 @@ def show_login_ui():
         function handleCredentialResponse(response) {{
             // Store the credential in session state
             const credential = response.credential;
-            // Use Streamlit's sendBackMsg to communicate with Python
+            // Use Streamlit's communication mechanism to send data to Python
             window.parent.postMessage({{
                 type: "streamlit:setComponentValue",
                 value: credential,
@@ -537,15 +581,16 @@ def show_login_ui():
             <div class="g_id_signin"
                 data-type="standard"
                 data-shape="rectangular"
-                data-theme="outline"
+                data-theme="filled_blue"
                 data-text="signin_with"
                 data-size="large"
+                data-width="220"
                 data-logo_alignment="left">
             </div>
             """, unsafe_allow_html=True)
             
             # Legacy OAuth flow as fallback
-            st.markdown("---")
+            st.markdown("<div style='margin-top:15px;'></div>", unsafe_allow_html=True)
             st.markdown("Or use traditional OAuth:")
             if GOOGLE_CLIENT_SECRET:
                 google_auth_url = init_google_oauth()
