@@ -1,11 +1,26 @@
-import yfinance as yf
 import pandas as pd
 import requests
+import os
 from datetime import datetime, timedelta
 import time
 import streamlit as st
 import random
+import numpy as np
+from alpha_vantage.timeseries import TimeSeries
 from database import cache_stock_data, get_cached_stock_data
+
+# Initialize Alpha Vantage client
+ALPHA_VANTAGE_API_KEY = os.environ.get('ALPHA_VANTAGE_API_KEY')
+if not ALPHA_VANTAGE_API_KEY:
+    st.error("Alpha Vantage API key not found. Please set the ALPHA_VANTAGE_API_KEY environment variable.")
+
+# Initialize the Alpha Vantage time series client
+try:
+    ts = TimeSeries(key=ALPHA_VANTAGE_API_KEY, output_format='pandas')
+    print("Alpha Vantage client initialized successfully")
+except Exception as e:
+    st.error(f"Failed to initialize Alpha Vantage client: {str(e)}")
+    print(f"Error initializing Alpha Vantage client: {str(e)}")
 
 # Dict to track which exchange a ticker is from
 TICKER_EXCHANGE_MAP = {}
@@ -120,7 +135,7 @@ def generate_fallback_stock_data(ticker, period='1mo'):
 
 def fetch_stock_data(ticker, period='1mo', use_cache=True, exchange=None):
     """
-    Fetch stock data for a given ticker and period from Yahoo Finance.
+    Fetch stock data for a given ticker and period from Alpha Vantage.
     
     Args:
         ticker (str): Stock ticker symbol
@@ -148,35 +163,105 @@ def fetch_stock_data(ticker, period='1mo', use_cache=True, exchange=None):
         # Add more logging for debugging
         print(f"Fetching data for ticker: {ticker}, period: {period}")
         
-        # If not in cache or cache disabled, fetch from Yahoo Finance
-        stock = yf.Ticker(ticker)
-        data = stock.history(period=period)
+        # Map period string to Alpha Vantage output size and function
+        if period == '1d':
+            outputsize = 'compact'  # Last 100 data points (1 day for minute data)
+            function = 'TIME_SERIES_INTRADAY'
+            interval = '5min'
+        elif period == '5d':
+            outputsize = 'full'  # Full data (up to 5 days for minute data)
+            function = 'TIME_SERIES_INTRADAY'
+            interval = '15min'
+        else:
+            # For longer periods, use daily data
+            if period in ['1mo', '3mo']:
+                outputsize = 'compact'  # Last 100 data points (about 3 months of trading days)
+            else:  # 6mo, 1y, etc.
+                outputsize = 'full'  # Full data (up to 20 years of daily data)
+            function = 'TIME_SERIES_DAILY'
+            interval = None
         
-        if data.empty:
-            print(f"Empty data returned for {ticker} (original: {original_ticker})")
-            st.warning(f"No data available for {original_ticker} in the selected period.")
+        # Handle index tickers specially (they start with ^)
+        if ticker.startswith('^'):
+            # For indices, we'll use SPY as a proxy for ^GSPC (S&P 500), etc.
+            if ticker == '^GSPC':
+                ticker = 'SPY'  # S&P 500 ETF
+            elif ticker == '^DJI':
+                ticker = 'DIA'  # Dow Jones Industrial Average ETF
+            elif ticker == '^IXIC':
+                ticker = 'QQQ'  # NASDAQ-100 ETF
+            elif ticker == '^RUT':
+                ticker = 'IWM'  # Russell 2000 ETF
+            elif ticker == '^VIX':
+                ticker = 'VIXY'  # VIX ETF
+            elif ticker == '^STOXX50E':
+                ticker = 'FEZ'  # EURO STOXX 50 ETF
+            elif ticker == '^N225':
+                ticker = 'EWJ'  # Japan ETF (proxy for Nikkei 225)
+            elif ticker == '^HSI':
+                ticker = 'EWH'  # Hong Kong ETF (proxy for Hang Seng)
+            elif ticker == '^FTSE':
+                ticker = 'EWU'  # UK ETF (proxy for FTSE 100)
+            print(f"Using ETF {ticker} as a proxy for index")
+        
+        # If ALPHA_VANTAGE_API_KEY is not available, use fallback data
+        if not ALPHA_VANTAGE_API_KEY:
+            print("Alpha Vantage API key not found, using fallback data")
+            return generate_fallback_stock_data(original_ticker, period)
             
-            # Try again with a different period to see if the ticker is valid but data is limited
-            test_data = stock.history(period="1d")
-            if not test_data.empty:
-                st.info(f"The ticker {original_ticker} exists but no data is available for the selected period. Try a shorter time period.")
+        # Fetch data from Alpha Vantage
+        try:
+            if function == 'TIME_SERIES_INTRADAY':
+                data, meta_data = ts.get_intraday(symbol=ticker, interval=interval, outputsize=outputsize)
+            else:  # 'TIME_SERIES_DAILY'
+                data, meta_data = ts.get_daily(symbol=ticker, outputsize=outputsize)
                 
-            # Use fallback data for demonstration purposes when deployed
-            print(f"Using fallback data for {ticker}")
-            return generate_fallback_stock_data(ticker, period)
-        
-        # Cache the data for future use
-        if use_cache:
-            cache_stock_data(ticker, period, data)
-        
-        return data
+            # Alpha Vantage returns data with most recent first, so reverse it
+            data = data.sort_index()
+            
+            # Limit data based on period
+            if period == '1mo':
+                data = data.tail(30)  # Approximately 1 month of trading days
+            elif period == '3mo':
+                data = data.tail(90)  # Approximately 3 months of trading days
+            elif period == '6mo':
+                data = data.tail(180)  # Approximately 6 months of trading days
+            elif period == '1y':
+                data = data.tail(252)  # Approximately 1 year of trading days
+            
+            # Rename columns to match Yahoo Finance format
+            data.rename(columns={
+                '1. open': 'Open',
+                '2. high': 'High',
+                '3. low': 'Low',
+                '4. close': 'Close',
+                '5. volume': 'Volume'
+            }, inplace=True)
+            
+            # Check if data is empty
+            if data.empty:
+                print(f"Empty data returned for {ticker} (original: {original_ticker})")
+                st.warning(f"No data available for {original_ticker} in the selected period.")
+                return generate_fallback_stock_data(original_ticker, period)
+                
+            # Cache the data for future use
+            if use_cache:
+                cache_stock_data(original_ticker, period, data)
+            
+            return data
+            
+        except Exception as e:
+            print(f"Alpha Vantage API error for {ticker}: {str(e)}")
+            st.warning(f"Unable to fetch data from Alpha Vantage for {original_ticker}. Using fallback data.")
+            return generate_fallback_stock_data(original_ticker, period)
+            
     except Exception as e:
         print(f"Exception fetching data for {ticker}: {str(e)}")
         st.error(f"Error fetching data for {ticker}: {str(e)}")
         
         # Use fallback data for demonstration purposes when deployed
         print(f"Using fallback data for {ticker} after exception")
-        return generate_fallback_stock_data(ticker, period)
+        return generate_fallback_stock_data(original_ticker, period)
 
 def generate_fallback_market_news(limit=10, market='global'):
     """
@@ -286,7 +371,7 @@ def generate_fallback_market_news(limit=10, market='global'):
 @st.cache_data(ttl=3600)  # Cache news for 1 hour
 def fetch_market_news(limit=10, market='global'):
     """
-    Fetch recent financial news from Yahoo Finance API.
+    Fetch recent financial news from Alpha Vantage API.
     
     Args:
         limit (int): Maximum number of news items to return
@@ -296,30 +381,61 @@ def fetch_market_news(limit=10, market='global'):
         list: List of news items with title, link, and summary
     """
     try:
-        # Select the appropriate ticker based on market
-        if market.lower() == 'us':
-            # S&P 500 for US market news
-            ticker = yf.Ticker("^GSPC")
-        else:
-            # Default to S&P 500 (global market news often comes from US sources)
-            ticker = yf.Ticker("^GSPC")
-            
-        news = ticker.news
-        
-        if not news:
-            print("No news data available, using fallback news")
+        # If Alpha Vantage API key is not available, use fallback news
+        if not ALPHA_VANTAGE_API_KEY:
+            print("Alpha Vantage API key not found, using fallback news")
             return generate_fallback_market_news(limit, market)
+            
+        # Select the appropriate topics based on market
+        if market.lower() == 'us':
+            topics = 'us_market'
+        else:
+            topics = 'global_market'
+            
+        # Fetch news from Alpha Vantage API
+        url = f"https://www.alphavantage.co/query?function=NEWS_SENTIMENT&topics={topics}&apikey={ALPHA_VANTAGE_API_KEY}&limit={limit}"
         
+        response = requests.get(url)
+        if response.status_code != 200:
+            print(f"Alpha Vantage API error: {response.status_code}, using fallback news")
+            return generate_fallback_market_news(limit, market)
+            
+        data = response.json()
+        
+        # Check if we got valid data
+        if 'feed' not in data or not data['feed']:
+            print("No news data available from Alpha Vantage, using fallback news")
+            return generate_fallback_market_news(limit, market)
+            
+        # Process the news items
         processed_news = []
-        for item in news[:limit]:
+        for item in data['feed'][:limit]:
+            # Generate a UUID based on the title for consistency
+            import hashlib
+            item_id = hashlib.md5(item.get('title', '').encode()).hexdigest()
+            
+            # Extract the summary from the content if available
+            summary = item.get('summary', '')
+            if not summary and 'content' in item:
+                # Use the first 200 characters of content as summary
+                summary = item['content'][:200] + '...' if len(item['content']) > 200 else item['content']
+                
+            # Format the published date
+            published = item.get('time_published', '')
+            if published:
+                # Format is YYYYMMDDTHHMMSS, we need YYYY-MM-DD HH:MM
+                try:
+                    published = f"{published[0:4]}-{published[4:6]}-{published[6:8]} {published[9:11]}:{published[11:13]}"
+                except:
+                    published = "Unknown"
+                    
             processed_news.append({
-                'id': item.get('uuid', ''),  # Unique ID for relating news
+                'id': item_id,
                 'title': item.get('title', 'No title'),
-                'link': item.get('link', '#'),
-                'publisher': item.get('publisher', 'Unknown'),
-                'summary': item.get('summary', ''),
-                'published': datetime.fromtimestamp(item.get('providerPublishTime', 0)).strftime('%Y-%m-%d %H:%M')
-                if 'providerPublishTime' in item else 'Unknown',
+                'link': item.get('url', '#'),
+                'publisher': item.get('source', 'Unknown'),
+                'summary': summary,
+                'published': published,
                 'source': f"{market.title()} Market" if market.lower() != 'global' else 'Global Market'
             })
         
