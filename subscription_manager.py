@@ -168,7 +168,7 @@ def show_login_form():
                 """, unsafe_allow_html=True)
         
         # Logout button
-        if st.sidebar.button("Logout"):
+        if st.sidebar.button("Logout", key="logout_button"):
             for key in ['user_logged_in', 'user_name', 'user_email', 'subscription_level', 
                         'subscription_expiry', 'trial_active', 'trial_end_date', 'user_id']:
                 if key in st.session_state:
@@ -234,7 +234,7 @@ def show_subscription_options():
     # Show downgrade option if on a paid plan
     if st.session_state.subscription_level != "free":
         st.sidebar.markdown("---")
-        if st.sidebar.button("Downgrade to Free Tier"):
+        if st.sidebar.button("Downgrade to Free Tier", key="downgrade_to_free"):
             # Update subscription in database
             if st.session_state.user_id:
                 update_subscription(
@@ -308,7 +308,7 @@ def process_payment():
                 st.rerun()
         
         # Cancel button
-        if st.sidebar.button("Cancel"):
+        if st.sidebar.button("Cancel", key="cancel_payment"):
             st.session_state.payment_processing = False
             st.session_state.selected_plan = None
             st.rerun()
@@ -375,7 +375,9 @@ def show_upgrade_prompt(feature_name, required_plan):
         st.info(f"⭐ Upgrade to the {required_plan.title()} Plan to unlock {feature_name}")
     
     with col2:
-        if st.button("Upgrade Now"):
+        # Add unique key based on feature name to avoid duplicate button IDs
+        button_key = f"upgrade_btn_{feature_name.replace(' ', '_').lower()}"
+        if st.button("Upgrade Now", key=button_key):
             st.session_state.selected_plan = required_plan
             show_payment_modal(required_plan)
             st.rerun()
