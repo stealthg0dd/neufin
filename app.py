@@ -507,6 +507,13 @@ def show_upgrade_prompt(feature_name, subscription_level="premium", location_id=
         location_id (str, optional): Additional identifier to ensure unique button keys
                                      when the same feature appears in different UI sections
     """
+    # Check if user already has access to this feature level
+    if is_authenticated():
+        user = get_current_user()
+        if user and user_has_permission(f"{subscription_level}_features"):
+            # User already has access to this feature, don't show upgrade prompt
+            return False
+    
     # Generate unique button keys based on feature name and location to avoid duplicate IDs
     feature_key = feature_name.lower().replace(" ", "_").replace("-", "_")
     if location_id:
@@ -523,6 +530,8 @@ def show_upgrade_prompt(feature_name, subscription_level="premium", location_id=
         if st.button("Upgrade Subscription", key=f"upgrade_for_{feature_key}"):
             st.session_state["show_subscription"] = True
             st.rerun()
+    
+    return True
 
 
 def show_predictive_analytics(real_time_indicator=""):
@@ -3182,7 +3191,8 @@ with recommendation_tab:
     st.markdown('<h3 style="color: #7B68EE;">AI-Powered Investment Recommendations</h3>', unsafe_allow_html=True)
     
     # Check if user has access to premium features
-    if check_feature_access('basic'):
+    need_upgrade = show_upgrade_prompt("AI-Powered Investment Recommendations", "basic", "investment_tab")
+    if not need_upgrade:
         try:
             # Only execute this if we have overall sentiment and sector data
             with st.spinner("Generating AI-powered investment recommendations..."):
@@ -3315,15 +3325,14 @@ with recommendation_tab:
                     st.error("Could not generate investment recommendations. Please try again later.")
         except Exception as e:
             st.error(f"Error generating investment recommendations: {str(e)}")
-    else:
-        # Show upgrade message for premium feature
-        show_upgrade_prompt("AI-Powered Investment Recommendations", "basic", "investment_tab")
+    # The else block is removed as we already show the upgrade prompt at the beginning
 
 with sector_tab:
     st.markdown('<h3 style="color: #7B68EE;">Detailed Sector Insights</h3>', unsafe_allow_html=True)
     
     # Check if user has access to premium features
-    if check_feature_access('basic'):
+    need_upgrade = show_upgrade_prompt("Detailed Sector Insights", "basic", "sector_tab")
+    if not need_upgrade:
         try:
             with st.spinner("Analyzing sector performance..."):
                 # Get sector data
@@ -3480,15 +3489,14 @@ with sector_tab:
                     st.info("No sector performance data available.")
         except Exception as e:
             st.error(f"Error generating sector insights: {str(e)}")
-    else:
-        # Show upgrade message for premium feature
-        show_upgrade_prompt("Detailed Sector Insights", "basic", "sector_tab")
+    # The else block is removed as we already show the upgrade prompt at the beginning
 
 with global_tab:
     st.markdown('<h3 style="color: #7B68EE;">Global Trade Impact Analysis</h3>', unsafe_allow_html=True)
     
     # Check if user has access to premium features
-    if check_feature_access('premium'):
+    need_upgrade = show_upgrade_prompt("Global Trade Impact Analysis", "premium", "global_tab")
+    if not need_upgrade:
         try:
             # Get global trade analysis
             with st.spinner("Analyzing global trade conditions..."):
@@ -3603,9 +3611,7 @@ with global_tab:
                     st.error(f"Could not retrieve global trade analysis: {global_analysis.get('error', 'Unknown error')}")
         except Exception as e:
             st.error(f"Error analyzing global trade conditions: {str(e)}")
-    else:
-        # Show upgrade message for premium feature
-        show_upgrade_prompt("Global Trade Impact Analysis", "premium", "global_tab")
+    # The else block is removed as we already show the upgrade prompt at the beginning
 
 # Close the premium features container
 st.markdown('</div>', unsafe_allow_html=True)
