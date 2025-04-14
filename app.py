@@ -905,12 +905,61 @@ st.markdown("""
         <span style="color: #7B68EE; font-weight: 700; font-size: 20px;">🔮 NEUFIN</span>
     </div>
     <div class="mercury-nav-menu">
-        <div class="mercury-nav-menu-item active">Dashboard</div>
-        <div class="mercury-nav-menu-item">Markets</div>
-        <div class="mercury-nav-menu-item">Portfolio</div>
-        <div class="mercury-nav-menu-item">Insights</div>
+        <div class="mercury-nav-menu-item active" onclick="navClick('dashboard')" id="nav-dashboard">Dashboard</div>
+        <div class="mercury-nav-menu-item" onclick="navClick('markets')" id="nav-markets">Markets</div>
+        <div class="mercury-nav-menu-item" onclick="navClick('portfolio')" id="nav-portfolio">Portfolio</div>
+        <div class="mercury-nav-menu-item" onclick="navClick('insights')" id="nav-insights">Insights</div>
     </div>
 </div>
+
+<script>
+function navClick(page) {
+    // Set all menu items to inactive
+    document.querySelectorAll('.mercury-nav-menu-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    
+    // Set clicked item as active
+    document.getElementById('nav-' + page).classList.add('active');
+    
+    // Store the selected page in localStorage
+    localStorage.setItem('neufin_selected_page', page);
+    
+    // In a real app, we'd navigate to the page
+    // For demo purposes, we'll just update the UI
+    if (page !== 'dashboard') {
+        // Show "coming soon" message for unimplemented pages
+        const main = document.querySelector('main');
+        if (main) {
+            const existingMsg = document.getElementById('coming-soon-msg');
+            if (!existingMsg) {
+                const msg = document.createElement('div');
+                msg.id = 'coming-soon-msg';
+                msg.style.position = 'fixed';
+                msg.style.top = '50%';
+                msg.style.left = '50%';
+                msg.style.transform = 'translate(-50%, -50%)';
+                msg.style.backgroundColor = 'rgba(123, 104, 238, 0.9)';
+                msg.style.color = 'white';
+                msg.style.padding = '20px';
+                msg.style.borderRadius = '10px';
+                msg.style.zIndex = '1000';
+                msg.style.textAlign = 'center';
+                msg.innerHTML = '<h3>' + page.charAt(0).toUpperCase() + page.slice(1) + ' section coming soon!</h3><p>This feature is under development.</p><button onclick="this.parentNode.remove()">Close</button>';
+                main.appendChild(msg);
+            }
+        }
+    }
+}
+
+// Restore selected page on load
+document.addEventListener('DOMContentLoaded', function() {
+    const selectedPage = localStorage.getItem('neufin_selected_page');
+    if (selectedPage) {
+        navClick(selectedPage);
+    }
+});
+</script>
 """, unsafe_allow_html=True)
 
 # Show auth UI if requested
@@ -1052,13 +1101,16 @@ st.markdown("""
         color: #ADB3C9;
         font-weight: 500;
         font-size: 14px;
-        padding: 8px 0;
+        padding: 8px 12px;
         cursor: pointer;
         position: relative;
+        border-radius: 4px;
+        transition: all 0.2s ease;
     }
     
     .mercury-nav-menu-item.active {
         color: #7B68EE;
+        background-color: rgba(123, 104, 238, 0.1);
     }
     
     .mercury-nav-menu-item.active:after {
@@ -1074,6 +1126,7 @@ st.markdown("""
     
     .mercury-nav-menu-item:hover {
         color: #FFFFFF;
+        background-color: rgba(123, 104, 238, 0.05);
     }
     
     /* Data metrics styling */
