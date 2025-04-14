@@ -28,6 +28,42 @@ GOOGLE_SCOPES = ['https://www.googleapis.com/auth/userinfo.email', 'https://www.
 # Facebook OAuth configuration
 FACEBOOK_APP_ID = os.environ.get('FACEBOOK_APP_ID', '')
 FACEBOOK_APP_SECRET = os.environ.get('FACEBOOK_APP_SECRET', '')
+
+def create_user_session(user, provider=None):
+    """
+    Create a standardized user session dictionary from either a User object or a user dictionary
+    
+    Args:
+        user: User object from SQLAlchemy or dictionary with user data
+        provider (str, optional): OAuth provider name if applicable
+        
+    Returns:
+        dict: User session dictionary
+    """
+    if isinstance(user, dict):
+        # Handle dictionary case
+        user_session = {
+            "id": user["id"],
+            "username": user["username"],
+            "email": user["email"],
+            "created_at": user["created_at"].isoformat() if isinstance(user["created_at"], datetime) else user["created_at"],
+            "last_login": datetime.now().isoformat()
+        }
+    else:
+        # Handle SQLAlchemy object case
+        user_session = {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "created_at": user.created_at.isoformat() if user.created_at else None,
+            "last_login": datetime.now().isoformat()
+        }
+    
+    # Add oauth provider if specified
+    if provider:
+        user_session["oauth_provider"] = provider
+        
+    return user_session
 FACEBOOK_REDIRECT_PATH = "/facebook_callback"  # Path component only
 FACEBOOK_SCOPES = ['email', 'public_profile']
 
@@ -238,15 +274,9 @@ def handle_google_identity_token(credential):
                 print(f"Failed to create user account: {error}")
                 return False
             
-        # Login user
-        st.session_state[USER_SESSION_KEY] = {
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "created_at": user.created_at.isoformat() if user.created_at else None,
-            "last_login": datetime.now().isoformat(),
-            "oauth_provider": "google"
-        }
+        # Login user - use helper function for consistent session creation
+        user_session = create_user_session(user, provider="google")
+        st.session_state[USER_SESSION_KEY] = user_session
         st.session_state[AUTH_STATUS_KEY] = True
         st.session_state[AUTH_MESSAGE_KEY] = f"Welcome, {name}! You've successfully signed in with Google."
         # Clear the show_auth flag to return to the main dashboard
@@ -376,15 +406,9 @@ def handle_facebook_callback(state, code):
                 st.session_state[AUTH_MESSAGE_KEY] = error or "Error creating user account. Please try again."
                 return False
             
-        # Login user
-        st.session_state[USER_SESSION_KEY] = {
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "created_at": user.created_at.isoformat() if user.created_at else None,
-            "last_login": datetime.now().isoformat(),
-            "oauth_provider": "facebook"
-        }
+        # Login user - use helper function for consistent session creation
+        user_session = create_user_session(user, provider="facebook")
+        st.session_state[USER_SESSION_KEY] = user_session
         st.session_state[AUTH_STATUS_KEY] = True
         st.session_state[AUTH_MESSAGE_KEY] = f"Welcome, {name}! You've successfully signed in with Facebook."
         # Clear the show_auth flag to return to the main dashboard
@@ -452,15 +476,9 @@ def handle_google_callback(state, code):
                 st.session_state[AUTH_MESSAGE_KEY] = error or "Error creating user account. Please try again."
                 return False
             
-        # Login user
-        st.session_state[USER_SESSION_KEY] = {
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "created_at": user.created_at.isoformat() if user.created_at else None,
-            "last_login": datetime.now().isoformat(),
-            "oauth_provider": "google"
-        }
+        # Login user - use helper function for consistent session creation
+        user_session = create_user_session(user, provider="google")
+        st.session_state[USER_SESSION_KEY] = user_session
         st.session_state[AUTH_STATUS_KEY] = True
         st.session_state[AUTH_MESSAGE_KEY] = f"Welcome, {name}! You've successfully signed in with Google."
         # Clear the show_auth flag to return to the main dashboard
