@@ -119,15 +119,17 @@ def login_user(email, password):
     """Login a user with email and password"""
     user, error = authenticate_user(email, password)
     if user:
-        st.session_state[USER_SESSION_KEY] = {
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "created_at": user.created_at.isoformat() if user.created_at else None,
+        # Handle user as dictionary (which is what database.py now returns)
+        user_session = {
+            "id": user["id"],
+            "username": user["username"],
+            "email": user["email"],
+            "created_at": user["created_at"].isoformat() if isinstance(user["created_at"], datetime) else user["created_at"],
             "last_login": datetime.now().isoformat()
         }
+        st.session_state[USER_SESSION_KEY] = user_session
         st.session_state[AUTH_STATUS_KEY] = True
-        st.session_state[AUTH_MESSAGE_KEY] = f"Welcome back, {user.username}!"
+        st.session_state[AUTH_MESSAGE_KEY] = f"Welcome back, {user['username']}!"
         # Clear the show_auth flag to return to the main dashboard
         st.session_state["show_auth"] = False
         return True
@@ -140,13 +142,15 @@ def register_user(username, email, password):
     try:
         user, error = create_user(username, email, password)
         if user:
-            st.session_state[USER_SESSION_KEY] = {
-                "id": user.id,
-                "username": user.username,
-                "email": user.email,
-                "created_at": user.created_at.isoformat() if user.created_at else None,
+            # Handle user as dictionary (which is what database.py now returns)
+            user_session = {
+                "id": user["id"],
+                "username": user["username"],
+                "email": user["email"],
+                "created_at": user["created_at"].isoformat() if isinstance(user["created_at"], datetime) else user["created_at"],
                 "last_login": datetime.now().isoformat()
             }
+            st.session_state[USER_SESSION_KEY] = user_session
             st.session_state[AUTH_STATUS_KEY] = True
             st.session_state[AUTH_MESSAGE_KEY] = f"Welcome to Neufin, {username}! Your account has been created."
             # Clear the show_auth flag to return to the main dashboard
