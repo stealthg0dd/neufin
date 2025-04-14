@@ -137,10 +137,10 @@ AUTH_MESSAGE_KEY = "neufin_auth_message"
 
 # User roles and permissions
 ROLES = {
-    "admin": ["read", "write", "delete", "manage_users"],
-    "premium": ["read", "write", "premium_features"],
-    "basic": ["read", "limited_features"],
-    "free": ["read", "very_limited_features"]
+    "admin": ["read", "write", "delete", "manage_users", "premium_features", "basic_features", "free_features"],
+    "premium": ["read", "write", "premium_features", "basic_features", "free_features"],
+    "basic": ["read", "basic_features", "free_features"],
+    "free": ["read", "free_features"]
 }
 
 def init_auth_session():
