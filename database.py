@@ -232,7 +232,17 @@ def create_user(username, email, password):
         session.add(new_subscription)
         session.commit()
         
-        return new_user, None
+        # Create a user dictionary with all needed data before session closes
+        # This prevents DetachedInstanceError when accessing user attributes later
+        user_dict = {
+            "id": new_user.id,
+            "username": new_user.username,
+            "email": new_user.email,
+            "created_at": new_user.created_at,
+            "last_login": new_user.last_login
+        }
+        
+        return user_dict, None
 
 def authenticate_user(email, password):
     """Authenticate a user with email and password"""
@@ -251,7 +261,17 @@ def authenticate_user(email, password):
         user.last_login = datetime.now()
         session.commit()
         
-        return user, None
+        # Create a user dictionary with all needed data before session closes
+        # This prevents DetachedInstanceError when accessing user attributes later
+        user_dict = {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "created_at": user.created_at,
+            "last_login": user.last_login
+        }
+        
+        return user_dict, None
 
 def get_user_subscription(user_id):
     """Get user subscription details"""
