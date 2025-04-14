@@ -176,11 +176,17 @@ def handle_google_identity_token(credential):
         bool: True if authentication was successful, False otherwise
     """
     try:
+        # Validate credential
+        if not credential:
+            print("Warning: Empty Google credential received")
+            return False
+            
         # Log the credential for debugging (truncated for security)
-        if credential and len(credential) > 20:
+        if len(credential) > 20:
             print(f"Processing Google credential: {credential[:10]}...{credential[-10:]}")
         else:
-            print("Warning: Empty or invalid Google credential received")
+            print("Warning: Invalid Google credential format received")
+            return False
             
         # Verify the token
         idinfo = id_token.verify_oauth2_token(
@@ -537,8 +543,8 @@ def show_login_ui():
     st.markdown("---")
     st.subheader("Or sign in with:")
     
-    # Process Google Identity token if present in query params
-    if 'google_credential' in st.session_state:
+    # Process Google Identity token if present in query params and not None
+    if 'google_credential' in st.session_state and st.session_state.google_credential:
         credential = st.session_state.google_credential
         if handle_google_identity_token(credential):
             st.rerun()
