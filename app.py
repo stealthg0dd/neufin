@@ -603,8 +603,20 @@ def show_navigation():
     
     st.markdown("---")
 
-# Show navigation at the top
-show_navigation()
+# Mercury-inspired navigation at the top
+st.markdown("""
+<div class="mercury-nav">
+    <div class="mercury-nav-logo">
+        <span style="color: #7B68EE; font-weight: 700; font-size: 20px;">🔮 NEUFIN</span>
+    </div>
+    <div class="mercury-nav-menu">
+        <div class="mercury-nav-menu-item active">Dashboard</div>
+        <div class="mercury-nav-menu-item">Markets</div>
+        <div class="mercury-nav-menu-item">Portfolio</div>
+        <div class="mercury-nav-menu-item">Insights</div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 # Show auth UI if requested
 if st.session_state["show_auth"]:
@@ -666,141 +678,211 @@ if "payment_success" in st.query_params:
     # Don't show main content when payment success UI is visible
     st.stop()
 
-# Custom CSS for enhanced futuristic Neufin design
+# Custom CSS for Mercury-inspired Neufin design
 st.markdown("""
 <style>
-    /* Base Styling */
+    /* Base Styling - Mercury inspired */
     .stApp {
-        background-color: #121212;
-        background-image: radial-gradient(circle at top right, rgba(123, 104, 238, 0.1), transparent 400px);
+        background-color: #0F1117;
+        color: #E0E0E0;
     }
     h1, h2, h3, h4, h5, h6 {
         color: #E0E0E0;
-        font-family: 'Helvetica Neue', sans-serif;
+        font-family: 'Inter', 'Helvetica Neue', sans-serif;
         font-weight: 600;
     }
     p {
-        color: #CCCCCC;
+        color: #ADB3C9;
     }
     
-    /* Custom Card Styling */
+    /* Mercury-inspired card styling */
     .neufin-card {
-        background: linear-gradient(to bottom right, rgba(30, 30, 46, 0.8), rgba(17, 17, 17, 0.9));
-        border-radius: 12px;
+        background: #171924;
+        border-radius: 8px;
         padding: 20px;
-        border: 1px solid rgba(123, 104, 238, 0.3);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        border: 1px solid #2A2D3A;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
         margin-bottom: 20px;
-        backdrop-filter: blur(10px);
-        transition: transform 0.2s, box-shadow 0.2s;
+        transition: all 0.2s ease;
     }
     
     .neufin-card:hover {
-        box-shadow: 0 6px 24px rgba(123, 104, 238, 0.2);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        border: 1px solid #3A3D4A;
     }
     
     .premium-features {
-        background: linear-gradient(135deg, rgba(30, 30, 46, 0.9) 0%, rgba(20, 20, 35, 0.9) 100%);
-        border-top: 1px solid rgba(123, 104, 238, 0.3);
-        border-left: 1px solid rgba(123, 104, 238, 0.3);
+        background: #171924;
+        border-top: 1px solid #2A2D3A;
+        border-left: 1px solid #2A2D3A;
     }
     
     .neufin-headline {
-        background: linear-gradient(90deg, #7B68EE, #3A3A80);
+        background: #171924;
         color: white;
-        padding: 20px;
-        border-radius: 12px;
-        text-align: center;
+        padding: 30px;
+        border-radius: 8px;
+        text-align: left;
         margin-bottom: 30px;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .neufin-headline:before {
-        content: "";
-        position: absolute;
-        top: -10px;
-        left: -10px;
-        right: -10px;
-        bottom: -10px;
-        background: linear-gradient(45deg, rgba(123, 104, 238, 0.2), transparent, rgba(123, 104, 238, 0.2));
-        z-index: -1;
-        filter: blur(20px);
+        border: 1px solid #2A2D3A;
     }
     
     .glow-text {
-        text-shadow: 0 0 10px rgba(123, 104, 238, 0.7);
+        color: #7B68EE;
+    }
+    
+    /* Mercury-inspired navigation */
+    .mercury-nav {
+        display: flex;
+        align-items: center;
+        background-color: #171924;
+        padding: 16px 20px;
+        border-radius: 8px;
+        border-bottom: 1px solid #2A2D3A;
+        margin-bottom: 24px;
+    }
+    
+    .mercury-nav-logo {
+        display: flex;
+        align-items: center;
+    }
+    
+    .mercury-nav-menu {
+        display: flex;
+        gap: 24px;
+        margin-left: 40px;
+    }
+    
+    .mercury-nav-menu-item {
+        color: #ADB3C9;
+        font-weight: 500;
+        font-size: 14px;
+        padding: 8px 0;
+        cursor: pointer;
+        position: relative;
+    }
+    
+    .mercury-nav-menu-item.active {
+        color: #7B68EE;
+    }
+    
+    .mercury-nav-menu-item.active:after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background-color: #7B68EE;
+        border-radius: 1px;
+    }
+    
+    .mercury-nav-menu-item:hover {
+        color: #FFFFFF;
     }
     
     /* Data metrics styling */
     .data-metric {
-        background: rgba(30, 30, 46, 0.8);
+        background: #171924;
         border-radius: 8px;
-        padding: 15px;
-        border-left: 3px solid #7B68EE;
+        padding: 16px;
+        border: 1px solid #2A2D3A;
         transition: transform 0.2s;
     }
     
     .data-metric:hover {
         transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
     
     .data-metric-value {
         font-size: 24px;
-        font-weight: bold;
+        font-weight: 600;
         color: #E0E0E0;
     }
     
     .data-metric-label {
-        font-size: 14px;
-        color: #AAAAAA;
-        margin-top: 3px;
+        font-size: 13px;
+        color: #ADB3C9;
+        margin-bottom: 4px;
+    }
+    
+    /* Mercury-style dashboard sections */
+    .metric-row {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+    
+    .metric-card {
+        flex: 1;
+        background: #171924;
+        border-radius: 8px;
+        border: 1px solid #2A2D3A;
+        padding: 16px;
+    }
+    
+    .metric-card-title {
+        font-size: 13px;
+        color: #ADB3C9;
+        margin-bottom: 8px;
+    }
+    
+    .metric-card-value {
+        font-size: 20px;
+        font-weight: 600;
+        color: #E0E0E0;
     }
     
     /* Sidebar styling */
     .css-1cypcdb, .css-d1kyf5, .css-z5fcl4 {
-        background-color: #1A1A2E !important;
+        background-color: #171924 !important;
+        border-right: 1px solid #2A2D3A !important;
     }
     
-    /* Button styling */
+    /* Mercury-styled buttons */
     .stButton > button {
-        background: linear-gradient(90deg, #7B68EE, #5D4DC4);
+        background-color: #7B68EE;
         color: white;
         border: none;
-        border-radius: 8px;
-        padding: 10px 15px;
-        transition: all 0.3s;
+        border-radius: 6px;
+        padding: 10px 16px;
+        font-weight: 500;
+        transition: all 0.2s;
     }
     
     .stButton > button:hover {
-        background: linear-gradient(90deg, #9281F1, #7B68EE);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(123, 104, 238, 0.4);
+        background-color: #6B58DE;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(123, 104, 238, 0.2);
     }
     
     /* Feature pills in the footer */
     .feature-pill {
         text-align: center;
-        padding: 10px 15px;
-        background-color: rgba(123, 104, 238, 0.2);
-        border-radius: 50px;
+        padding: 8px 12px;
+        background-color: #171924;
+        border: 1px solid #2A2D3A;
+        border-radius: 6px;
         display: flex;
         align-items: center;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
     }
     
     .feature-pill:hover {
-        background-color: rgba(123, 104, 238, 0.4);
-        transform: translateY(-2px);
+        background-color: rgba(123, 104, 238, 0.1);
+        border: 1px solid #7B68EE;
+        transform: translateY(-1px);
     }
     
     .feature-icon {
         margin-right: 8px;
-        font-size: 18px;
+        font-size: 16px;
+        color: #7B68EE;
     }
     
     .feature-text {
-        color: #e0e0e0;
+        color: #E0E0E0;
         font-weight: 500;
     }
     
@@ -810,38 +892,42 @@ st.markdown("""
     }
     
     .dataframe th {
-        background-color: rgba(30, 30, 46, 0.8) !important;
+        background-color: #171924 !important;
         color: #7B68EE !important;
         font-weight: 600 !important;
-        border-bottom: 1px solid rgba(123, 104, 238, 0.2) !important;
+        border-bottom: 1px solid #2A2D3A !important;
         text-align: left !important;
-        padding: 8px 12px !important;
+        padding: 12px 16px !important;
     }
     
     .dataframe td {
-        background-color: rgba(20, 20, 30, 0.6) !important;
+        background-color: #171924 !important;
         color: #E0E0E0 !important;
         border: none !important;
-        padding: 8px 12px !important;
+        border-bottom: 1px solid #2A2D3A !important;
+        padding: 12px 16px !important;
     }
     
-    /* Tabs styling */
+    /* Mercury-style tabs */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 2px;
-        background-color: transparent;
+        gap: 0;
+        border-bottom: 1px solid #2A2D3A;
     }
     
     .stTabs [data-baseweb="tab"] {
-        background-color: rgba(30, 30, 46, 0.4);
-        border-radius: 4px 4px 0 0;
-        color: #AAAAAA;
+        height: 40px;
+        white-space: pre-wrap;
+        background-color: transparent;
+        border-radius: 0;
         padding: 8px 16px;
+        margin-right: 0;
+        color: #ADB3C9;
     }
     
     .stTabs [aria-selected="true"] {
-        background-color: rgba(123, 104, 238, 0.2);
-        color: #7B68EE;
+        background-color: transparent;
         border-bottom: 2px solid #7B68EE;
+        color: #E0E0E0;
     }
     
     /* Chart background */
@@ -851,35 +937,55 @@ st.markdown("""
     
     /* Real-time update styling */
     .real-time-badge {
-        background-color: rgba(123, 104, 238, 0.2);
-        color: #7B68EE;
+        display: inline-block;
+        background-color: rgba(0, 200, 83, 0.1);
+        color: #00C853;
         font-size: 12px;
-        padding: 4px 8px;
-        border-radius: 12px;
-        margin-left: 8px;
-        display: inline-flex;
-        align-items: center;
-        animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-        "0%" {
-            box-shadow: 0 0 0 0 rgba(123, 104, 238, 0.4);
-        }
-        "70%" {
-            box-shadow: 0 0 0 6px rgba(123, 104, 238, 0);
-        }
-        "100%" {
-            box-shadow: 0 0 0 0 rgba(123, 104, 238, 0);
-        }
+        padding: 4px 10px;
+        border-radius: 4px;
+        margin-left: 10px;
     }
     
     /* Toast styling */
     .stToast {
-        background-color: rgba(30, 30, 46, 0.9) !important;
+        background-color: #171924 !important;
         color: #E0E0E0 !important;
-        border: 1px solid rgba(123, 104, 238, 0.3) !important;
+        border: 1px solid #2A2D3A !important;
         border-radius: 8px !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+    }
+    
+    /* Mercury sidebar menu */
+    .sidebar-menu {
+        margin-top: 24px;
+    }
+    
+    .sidebar-menu-item {
+        padding: 10px 20px;
+        display: flex;
+        align-items: center;
+        color: #ADB3C9;
+        font-weight: 500;
+        margin-bottom: 2px;
+        cursor: pointer;
+        border-left: 3px solid transparent;
+    }
+    
+    .sidebar-menu-item:hover {
+        background-color: rgba(123, 104, 238, 0.1);
+        color: #E0E0E0;
+    }
+    
+    .sidebar-menu-item.active {
+        background-color: rgba(123, 104, 238, 0.1);
+        color: #7B68EE;
+        border-left: 3px solid #7B68EE;
+    }
+    
+    .sidebar-menu-icon {
+        margin-right: 12px;
+        width: 20px;
+        text-align: center;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -908,54 +1014,44 @@ if 'last_auto_refresh' not in st.session_state:
 if 'show_demo' not in st.session_state:
     st.session_state.show_demo = False
 
-# Main title with enhanced futuristic styling and animated elements
+# Mercury-inspired headline with clean design
 # Add real-time badge if auto-refresh is enabled
-real_time_badge = """<span class="real-time-badge">🔄 REAL-TIME</span>""" if st.session_state.auto_refresh else ""
+real_time_badge = """<span class="real-time-badge">🔄 Real-time</span>""" if st.session_state.auto_refresh else ""
 # Add headline with real-time badge if enabled
 headline_html = f"""
-<div class="neufin-headline animated">
-    <div class="headline-glow"></div>
-    <h1 class="glow-text">🔮 NEUFIN {real_time_badge}</h1>
-    <h3>The Future of Financial Intelligence</h3>
-    <p style="color:#CCC">Advanced AI-Powered Market Analytics Platform</p>
-    <div class="pulse-circle"></div>
+<div class="neufin-headline">
+    <div class="mercury-header-content">
+        <h1 class="glow-text">🔮 Neufin Dashboard {real_time_badge}</h1>
+        <p class="mercury-header-subtitle">AI-Powered Market Analytics Platform</p>
+    </div>
 </div>
 """
 
 # Define CSS separately to avoid f-string issues
 css_styles = """
 <style>
-    .animated .headline-glow {
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle, rgba(123, 104, 238, 0.1) 0%, transparent 70%);
-        animation: rotate 15s infinite linear;
+    .neufin-headline {
+        padding: 24px 30px;
+        margin-bottom: 24px;
+        position: relative;
     }
     
-    @keyframes rotate {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
+    .mercury-header-content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
     }
     
-    .pulse-circle {
-        position: absolute;
-        bottom: -30px;
-        right: 30px;
-        width: 15px;
-        height: 15px;
-        border-radius: 50%;
-        background-color: #7B68EE;
-        box-shadow: 0 0 20px #7B68EE;
-        animation: pulse-animation 2s infinite;
+    .mercury-header-subtitle {
+        color: #ADB3C9;
+        font-size: 14px;
+        margin-top: 0;
     }
     
-    @keyframes pulse-animation {
-        0% { box-shadow: 0 0 0 0 rgba(123, 104, 238, 0.7); }
-        70% { box-shadow: 0 0 0 15px rgba(123, 104, 238, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(123, 104, 238, 0); }
+    .glow-text {
+        font-weight: 700;
+        margin: 0;
+        font-size: 24px;
     }
 </style>
 """
@@ -964,110 +1060,183 @@ css_styles = """
 st.markdown(headline_html, unsafe_allow_html=True)
 st.markdown(css_styles, unsafe_allow_html=True)
 
-# Enhanced introduction with feature highlights
+# Mercury-inspired introduction with feature cards
 st.markdown("""
-<div class="neufin-card">
-    <div class="intro-container">
-        <div class="intro-text">
-            <p style="font-size:20px; margin-bottom:20px;">
-                <span style="color:#7B68EE; font-weight:bold; display:inline-block; border-bottom: 2px solid #7B68EE; padding-bottom:5px;">Welcome to Neufin</span> 
-                <span style="font-style:italic; color:#CCC; font-size:16px;">Where AI meets Finance</span>
-            </p>
-            <p style="margin-bottom:15px;">
-                Our cutting-edge neural networks continuously analyze market data, global news, and trading patterns to deliver 
-                predictive insights with unprecedented accuracy.
-            </p>
-            <p style="font-size:14px; color:#AAA; line-height:1.6;">
-                Navigate the complexities of today's markets with our advanced toolset designed for the modern investor.
-            </p>
+<div class="metric-row">
+    <div class="metric-card">
+        <div class="metric-card-title">Market Overview</div>
+        <div class="metric-card-value">
+            <span style="color:#7B68EE; font-weight:600;">Neufin</span> Financial Intelligence
         </div>
-        <div class="feature-highlights">
-            <div class="feature-item">
-                <div class="feature-icon">📊</div>
-                <div class="feature-title">AI-Powered Analysis</div>
-            </div>
-            <div class="feature-item">
-                <div class="feature-icon">🔍</div>
-                <div class="feature-title">Sentiment Tracking</div>
-            </div>
-            <div class="feature-item">
-                <div class="feature-icon">💰</div>
-                <div class="feature-title">Investment Insights</div>
-            </div>
-            <div class="feature-item">
-                <div class="feature-icon">🌐</div>
-                <div class="feature-title">Global Markets</div>
-            </div>
-        </div>
+        <p style="margin-top:12px; color:#ADB3C9; font-size:14px;">
+            Our platform combines AI analysis with real-time financial data to provide you with the most accurate market insights.
+        </p>
+    </div>
+    <div class="metric-card">
+        <div class="metric-card-title">Today's Date</div>
+        <div class="metric-card-value">April 14, 2025</div>
+        <p style="margin-top:12px; color:#ADB3C9; font-size:14px;">
+            Welcome to your personal financial dashboard.
+        </p>
+    </div>
+</div>
+
+<div class="mercury-section-title">
+    <div class="mercury-section-title-icon">⚡</div>
+    Featured Insights
+</div>
+
+<div class="feature-grid">
+    <div class="feature-card">
+        <div class="feature-card-icon">📊</div>
+        <div class="feature-card-title">AI-Powered Analysis</div>
+        <div class="feature-card-description">Advanced neural networks analyze market patterns and trends</div>
+    </div>
+    <div class="feature-card">
+        <div class="feature-card-icon">🔍</div>
+        <div class="feature-card-title">Sentiment Tracking</div>
+        <div class="feature-card-description">Real-time analysis of market sentiment across global markets</div>
+    </div>
+    <div class="feature-card">
+        <div class="feature-card-icon">💰</div>
+        <div class="feature-card-title">Investment Insights</div>
+        <div class="feature-card-description">Personalized investment recommendations based on market conditions</div>
+    </div>
+    <div class="feature-card">
+        <div class="feature-card-icon">🌐</div>
+        <div class="feature-card-title">Global Markets</div>
+        <div class="feature-card-description">Comprehensive coverage of financial markets worldwide</div>
     </div>
 </div>
 
 <style>
-    .intro-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
-    }
-    
-    .intro-text {
-        flex: 3;
-        min-width: 300px;
-    }
-    
-    .feature-highlights {
-        flex: 2;
-        min-width: 250px;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 15px;
-    }
-    
-    .feature-item {
-        background: rgba(30, 30, 46, 0.7);
-        border-radius: 10px;
-        padding: 15px;
-        text-align: center;
-        transition: all 0.3s ease;
-        border: 1px solid rgba(123, 104, 238, 0.1);
-    }
-    
-    .feature-item:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 5px 15px rgba(123, 104, 238, 0.2);
-        border: 1px solid rgba(123, 104, 238, 0.5);
-    }
-    
-    .feature-icon {
-        font-size: 24px;
-        margin-bottom: 8px;
-    }
-    
-    .feature-title {
-        font-size: 14px;
+    .mercury-section-title {
+        font-size: 16px;
+        font-weight: 600;
         color: #E0E0E0;
-        font-weight: 500;
+        margin: 24px 0 16px 0;
+        display: flex;
+        align-items: center;
+    }
+
+    .mercury-section-title-icon {
+        color: #7B68EE;
+        margin-right: 8px;
+        font-size: 18px;
+    }
+
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .feature-card {
+        background: #171924;
+        border: 1px solid #2A2D3A;
+        border-radius: 8px;
+        padding: 20px;
+        transition: all 0.2s ease;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border: 1px solid #3A3D4A;
+    }
+
+    .feature-card-icon {
+        font-size: 24px;
+        margin-bottom: 12px;
+        color: #7B68EE;
+    }
+
+    .feature-card-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #E0E0E0;
+    }
+
+    .feature-card-description {
+        font-size: 14px;
+        color: #ADB3C9;
+        line-height: 1.4;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # Sidebar for filters, inputs, and account features
 with st.sidebar:
-    # Custom Neufin logo and brand
-    from pathlib import Path
-    logo_path = Path("neufin-icon.svg")
-    if logo_path.exists():
-        st.image("neufin-icon.svg", width=100)
-    else:
-        st.markdown("""
-        <div style="text-align: center; margin-bottom: 5px;">
-            <h1 style="color: #7B68EE; font-weight: 700;">🔮</h1>
-        </div>
-        """, unsafe_allow_html=True)
-    
+    # Mercury-style branding
     st.markdown("""
-    <div style="text-align: center; margin-bottom: 20px;">
-        <h2 style="color: #7B68EE; font-weight: 700;">NEUFIN</h2>
-        <p style="color: #AAA; font-size: 12px; margin-top: -10px;">FINANCIAL INTELLIGENCE</p>
+    <div class="mercury-sidebar-brand">
+        <div class="mercury-logo">🔮</div>
+        <div class="mercury-brand-text">
+            <div class="mercury-brand-name">NEUFIN</div>
+            <div class="mercury-brand-tagline">FINANCIAL INTELLIGENCE</div>
+        </div>
+    </div>
+    
+    <style>
+        .mercury-sidebar-brand {
+            display: flex;
+            align-items: center;
+            padding: 0 10px 20px 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #2A2D3A;
+        }
+        
+        .mercury-logo {
+            font-size: 28px;
+            margin-right: 10px;
+            color: #7B68EE;
+        }
+        
+        .mercury-brand-text {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .mercury-brand-name {
+            font-weight: 700;
+            font-size: 18px;
+            color: #7B68EE;
+            line-height: 1.2;
+        }
+        
+        .mercury-brand-tagline {
+            font-size: 10px;
+            color: #ADB3C9;
+            letter-spacing: 0.5px;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # Mercury-style sidebar navigation
+    st.markdown("""
+    <div class="sidebar-menu">
+        <div class="sidebar-menu-item active">
+            <div class="sidebar-menu-icon">📊</div>
+            Dashboard
+        </div>
+        <div class="sidebar-menu-item">
+            <div class="sidebar-menu-icon">💰</div>
+            Markets
+        </div>
+        <div class="sidebar-menu-item">
+            <div class="sidebar-menu-icon">📈</div>
+            Portfolio
+        </div>
+        <div class="sidebar-menu-item">
+            <div class="sidebar-menu-icon">🧠</div>
+            AI Analysis
+        </div>
+        <div class="sidebar-menu-item">
+            <div class="sidebar-menu-icon">⚙️</div>
+            Settings
+        </div>
     </div>
     """, unsafe_allow_html=True)
     
