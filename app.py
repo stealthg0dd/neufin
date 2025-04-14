@@ -2991,7 +2991,7 @@ def load_dashboard():
                                     <div class="data-metric-label">Current Price</div>
                                 </div>
                                 <div class="data-metric">
-                                    <div class="data-metric-value" style="color: {'#4CAF50' if pct_change >= 0 else '#FF5252'}">
+                                    <div class="data-metric-value" style="color: {('#4CAF50' if pct_change >= 0 else '#FF5252')}">
                                         {'+' if pct_change >= 0 else ''}{pct_change:.2f}%
                                     </div>
                                     <div class="data-metric-label">Period Change</div>
