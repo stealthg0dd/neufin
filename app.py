@@ -18,16 +18,7 @@ import re
 from urllib.parse import parse_qs, urlparse
 
 # Import custom modules
-from data_fetcher import fetch_stock_data, fetch_market_news, fetch_sector_performance, get_market_indices as fetch_market_indices
-from sentiment_analyzer import analyze_text_sentiment, analyze_stock_sentiment, analyze_news_sentiment_batch
-from utils import format_sentiment_score, get_sentiment_color, get_market_indices, format_large_number
-from utils import get_market_preferences, update_market_preferences
-from database import store_market_sentiment, get_historical_sentiment
-from investment_advisor import get_stock_recommendations, analyze_global_trade_impact, get_sector_insights
-from ai_analyst import analyze_global_trade_conditions, generate_investment_thesis, generate_sector_outlook
-from news_recommender import NewsRecommender, format_news_card
-
-# Import authentication and subscription modules
+# Import auth modules
 from auth_manager import (
     init_auth_session, is_authenticated, get_current_user, 
     login_user, register_user, logout_user, init_google_oauth,
@@ -35,10 +26,45 @@ from auth_manager import (
     user_has_permission, require_login, require_permission, 
     show_login_ui, show_user_profile_ui, start_free_trial
 )
+
+# Import database modules
+from database import (
+    get_user_subscription, update_subscription, get_historical_sentiment, 
+    store_market_sentiment
+)
+
+# Import subscription modules
 from subscription_manager import (
     create_checkout_session, handle_subscription_webhook,
     show_payment_ui, show_payment_success_ui, show_subscription_management
 )
+
+# Import sentiment analysis modules
+from sentiment_analyzer import analyze_text_sentiment, analyze_stock_sentiment, analyze_news_sentiment_batch
+
+# Import data fetching modules
+from data_fetcher import fetch_stock_data, fetch_market_news, fetch_sector_performance, get_market_indices
+
+# Import investment advisor modules
+from investment_advisor import get_stock_recommendations, analyze_global_trade_impact, get_sector_insights
+
+# Import AI analysis modules
+from ai_analyst import generate_investment_thesis, generate_sector_outlook, analyze_global_trade_conditions
+
+# Import utility modules
+from utils import (
+    format_sentiment_score, get_sentiment_color, get_market_preferences, 
+    update_market_preferences, format_large_number, get_market_indices
+)
+
+# Import predictive analytics modules
+from predictive_analytics import (
+    predict_future_sentiment, generate_prediction_chart, get_sentiment_insights, 
+    forecast_sentiment_impact, integrate_price_prediction
+)
+
+# Import news recommendation module
+from news_recommender import NewsRecommender, format_news_card
 
 # Check if OpenAI API key is available for advanced sentiment analysis
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
@@ -497,6 +523,266 @@ def show_upgrade_prompt(feature_name, subscription_level="premium", location_id=
         if st.button("Upgrade Subscription", key=f"upgrade_for_{feature_key}"):
             st.session_state["show_subscription"] = True
             st.rerun()
+
+
+def show_predictive_analytics(real_time_indicator=""):
+    """
+    Display the predictive analytics section with sentiment forecasting
+    
+    Args:
+        real_time_indicator (str): HTML string for real-time indicator icon
+    """
+    # Start the predictive analytics card
+    st.markdown('<div class="neufin-card">', unsafe_allow_html=True)
+    st.markdown(f'<h3 style="color: #7B68EE; margin-bottom: 15px;">🔮 Predictive Analytics {real_time_indicator}</h3>', unsafe_allow_html=True)
+    
+    try:
+        # Create tabs for different prediction views
+        pred_tabs = st.tabs(["Sentiment Forecast", "Price Impact", "AI Insights"])
+        
+        with pred_tabs[0]:
+            # Sentiment forecast tab
+            st.markdown("### Sentiment Forecast")
+            st.markdown("Forecasting market sentiment for the next 10 days based on historical patterns and current market conditions.")
+            
+            days_ahead = st.slider("Forecast Days", min_value=5, max_value=30, value=10, step=5, 
+                                   help="Number of days to forecast ahead")
+            
+            with st.spinner("Generating sentiment forecast..."):
+                # Get sentiment forecast using predictive model
+                forecast_df = predict_future_sentiment(days_ahead=days_ahead)
+                
+                # Get historical sentiment for context
+                historical_df = pd.DataFrame(get_historical_sentiment(30))
+                
+                if not forecast_df.empty:
+                    # Generate forecast visualization
+                    fig = generate_prediction_chart(forecast_df, historical_df, confidence=0.9)
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    # Add explanation about the model
+                    with st.expander("About the Forecast Model"):
+                        st.markdown("""
+                        <div style="color: #CCCCCC;">
+                            <p><strong>How Our Forecasting Works:</strong></p>
+                            <p>Our sentiment forecasting model uses machine learning to predict future market sentiment based on:</p>
+                            <ul>
+                                <li>Historical sentiment patterns over time</li>
+                                <li>Market volatility and trend indicators</li>
+                                <li>Seasonality and cyclical patterns in market behavior</li>
+                                <li>Correlation between sentiment and external market factors</li>
+                            </ul>
+                            <p>The model is trained on historical data and is updated regularly to improve accuracy. The shaded area represents the confidence interval, indicating the range of potential outcomes.</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                else:
+                    st.warning("Insufficient historical data to generate a forecast. More market data is needed.")
+        
+        with pred_tabs[1]:
+            # Price impact tab
+            st.markdown("### Price Impact Prediction")
+            st.markdown("Forecast how sentiment changes might affect stock prices")
+            
+            # Stock selection for prediction
+            selected_stock = st.selectbox(
+                "Select stock for price impact prediction",
+                st.session_state.selected_stocks,
+                key="price_impact_stock"
+            )
+            
+            with st.spinner("Analyzing potential price impact..."):
+                # Get forecast data if not already generated
+                if 'forecast_df' not in locals():
+                    forecast_df = predict_future_sentiment(days_ahead=10)
+                
+                if not forecast_df.empty:
+                    # Get impact analysis for selected stock
+                    impact_analysis = forecast_sentiment_impact(selected_stock, forecast_df)
+                    
+                    # Create metrics row
+                    col1, col2, col3 = st.columns(3)
+                    
+                    with col1:
+                        st.metric(
+                            "Potential Price Impact",
+                            f"{impact_analysis['price_impact_pct']:.2f}%",
+                            delta=f"{impact_analysis['price_impact_pct']:.2f}%",
+                            delta_color="normal"
+                        )
+                    
+                    with col2:
+                        st.metric(
+                            "Confidence Level",
+                            f"{impact_analysis['confidence_level']:.0%}",
+                            help="Model's confidence in the prediction"
+                        )
+                        
+                    with col3:
+                        st.metric(
+                            "Time Horizon",
+                            f"{impact_analysis['time_horizon']} days",
+                            help="Expected time for impact to materialize"
+                        )
+                    
+                    # Get historical stock data to integrate with prediction
+                    stock_data = fetch_stock_data(selected_stock, period='1mo')
+                    
+                    if stock_data is not None and not stock_data.empty:
+                        # Integrate price prediction with sentiment forecast
+                        price_forecast = integrate_price_prediction(forecast_df, stock_data)
+                        
+                        # Plot the integrated price forecast
+                        fig = go.Figure()
+                        
+                        # Historical prices
+                        fig.add_trace(go.Scatter(
+                            x=price_forecast['Date'][price_forecast['Type'] == 'Historical'],
+                            y=price_forecast['Price'][price_forecast['Type'] == 'Historical'],
+                            name='Historical Price',
+                            line=dict(color='#4CAF50', width=2)
+                        ))
+                        
+                        # Forecasted prices
+                        fig.add_trace(go.Scatter(
+                            x=price_forecast['Date'][price_forecast['Type'] == 'Forecast'],
+                            y=price_forecast['Price'][price_forecast['Type'] == 'Forecast'],
+                            name='Forecasted Price',
+                            line=dict(color='#7B68EE', width=2, dash='dash')
+                        ))
+                        
+                        # Add confidence intervals
+                        fig.add_trace(go.Scatter(
+                            x=price_forecast['Date'][price_forecast['Type'] == 'Forecast'],
+                            y=price_forecast['Upper Bound'][price_forecast['Type'] == 'Forecast'],
+                            fill=None,
+                            mode='lines',
+                            line=dict(color='rgba(123, 104, 238, 0)'),
+                            showlegend=False
+                        ))
+                        
+                        fig.add_trace(go.Scatter(
+                            x=price_forecast['Date'][price_forecast['Type'] == 'Forecast'],
+                            y=price_forecast['Lower Bound'][price_forecast['Type'] == 'Forecast'],
+                            fill='tonexty',
+                            mode='lines',
+                            line=dict(color='rgba(123, 104, 238, 0)'),
+                            fillcolor='rgba(123, 104, 238, 0.2)',
+                            name='Confidence Interval'
+                        ))
+                        
+                        # Update layout
+                        fig.update_layout(
+                            title=f"{selected_stock} - Price Forecast Based on Sentiment",
+                            xaxis_title="Date",
+                            yaxis_title="Price",
+                            paper_bgcolor="rgba(0,0,0,0)",
+                            plot_bgcolor="rgba(30,30,46,0.3)",
+                            font=dict(color="#E0E0E0"),
+                            title_font_color="#7B68EE",
+                            xaxis=dict(
+                                gridcolor="rgba(123,104,238,0.15)",
+                                zerolinecolor="rgba(123,104,238,0.15)"
+                            ),
+                            yaxis=dict(
+                                gridcolor="rgba(123,104,238,0.15)",
+                                zerolinecolor="rgba(123,104,238,0.15)"
+                            ),
+                            legend=dict(
+                                orientation="h",
+                                yanchor="bottom",
+                                y=1.02,
+                                xanchor="right",
+                                x=1,
+                                bgcolor="rgba(30,30,46,0.5)",
+                                bordercolor="rgba(123,104,238,0.5)"
+                            ),
+                            hovermode="x unified"
+                        )
+                        
+                        st.plotly_chart(fig, use_container_width=True)
+                        
+                        # Display impact factors
+                        st.subheader("Impact Factors")
+                        
+                        for factor in impact_analysis['impact_factors']:
+                            st.markdown(f"""
+                            <div style="padding: 10px; background-color: rgba(123, 104, 238, 0.1); 
+                                        border-radius: 5px; margin-bottom: 10px; border-left: 3px solid #7B68EE">
+                                <p style="margin: 0; color: #E0E0E0;"><strong>{factor['name']}:</strong> {factor['description']}</p>
+                            </div>
+                            """, unsafe_allow_html=True)
+                    else:
+                        st.error(f"Unable to retrieve historical data for {selected_stock}")
+                else:
+                    st.warning("Insufficient historical data to generate price impact prediction.")
+        
+        with pred_tabs[2]:
+            # AI insights tab
+            st.markdown("### AI-Generated Market Insights")
+            st.markdown("Advanced analysis of predicted market trends and potential investment strategies")
+            
+            with st.spinner("Generating AI insights..."):
+                # Get forecast data if not already generated
+                if 'forecast_df' not in locals():
+                    forecast_df = predict_future_sentiment(days_ahead=10)
+                
+                if not forecast_df.empty:
+                    # Get AI-generated insights text
+                    insights_html = get_sentiment_insights(forecast_df)
+                    
+                    st.markdown(insights_html, unsafe_allow_html=True)
+                    
+                    # Add action suggestions based on insights
+                    st.subheader("Suggested Actions")
+                    
+                    actions_col1, actions_col2 = st.columns(2)
+                    
+                    with actions_col1:
+                        st.markdown("""
+                        <div style="padding: 15px; background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(46, 125, 50, 0.1) 100%); 
+                                     border-radius: 5px; height: 100%;">
+                            <h4 style="color: #4CAF50; margin-top: 0;">📈 If Bullish Scenario Materializes</h4>
+                            <ul style="color: #CCCCCC; padding-left: 20px;">
+                                <li>Consider increasing positions in cyclical stocks</li>
+                                <li>Review portfolio for potential profit-taking opportunities</li>
+                                <li>Monitor for momentum breakouts in key sectors</li>
+                                <li>Consider reduced hedging positions</li>
+                            </ul>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    with actions_col2:
+                        st.markdown("""
+                        <div style="padding: 15px; background: linear-gradient(135deg, rgba(244, 67, 54, 0.1) 0%, rgba(183, 28, 28, 0.1) 100%); 
+                                     border-radius: 5px; height: 100%;">
+                            <h4 style="color: #F44336; margin-top: 0;">📉 If Bearish Scenario Materializes</h4>
+                            <ul style="color: #CCCCCC; padding-left: 20px;">
+                                <li>Consider defensive positioning in utilities and consumer staples</li>
+                                <li>Review stop-loss levels on more volatile positions</li>
+                                <li>Evaluate increasing cash allocations</li>
+                                <li>Consider hedging strategies for key positions</li>
+                            </ul>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    # Disclaimer
+                    st.markdown("""
+                    <div style="margin-top: 20px; padding: 10px; background-color: rgba(33, 33, 33, 0.4); border-radius: 5px; font-size: 12px;">
+                        <p style="margin: 0; color: #AAAAAA;"><strong>Disclaimer:</strong> These insights are generated by AI based on historical patterns and current market sentiment. 
+                        They should not be considered financial advice. Always conduct your own research and consider consulting with a financial advisor before making investment decisions.</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                else:
+                    st.warning("Insufficient historical data to generate AI insights.")
+    
+    except Exception as e:
+        st.error(f"Error generating predictive analytics: {str(e)}")
+        
+    # Close the predictive analytics card
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Add spacer between cards
+    st.markdown('<div style="height: 20px;"></div>', unsafe_allow_html=True)
 
 # Initialize page navigation
 if "current_page" not in st.session_state:
@@ -2403,6 +2689,38 @@ def load_dashboard():
     
     # Add spacer between cards
     st.markdown('<div style="height: 20px;"></div>', unsafe_allow_html=True)
+    
+    # Predictive Analytics Section - based on sentiment trends
+    # Only show for premium/authenticated users or in demo mode
+    if check_feature_access('premium') or st.session_state.show_demo:
+        show_predictive_analytics(real_time_indicator)
+    else:
+        # Show premium feature teaser
+        st.markdown('<div class="neufin-card">', unsafe_allow_html=True)
+        st.markdown(f'<h3 style="color: #7B68EE; margin-bottom: 15px;">🔮 Predictive Analytics {real_time_indicator}</h3>', unsafe_allow_html=True)
+        
+        # Premium feature message
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.markdown("""
+            <div style="padding: 20px; background-color: rgba(123, 104, 238, 0.1); border-radius: 8px; border-left: 4px solid #7B68EE;">
+                <h4 style="color: #7B68EE; margin-top: 0;">Unlock Predictive Analytics</h4>
+                <p style="margin-bottom: 10px;">
+                    Gain access to AI-powered sentiment forecasting and price prediction models that help you anticipate market movements before they happen.
+                </p>
+                <ul style="list-style-type: none; padding-left: 5px; color: #ADB3C9;">
+                    <li>✓ 10-day sentiment forecasting with confidence intervals</li>
+                    <li>✓ Price impact predictions based on sentiment analysis</li>
+                    <li>✓ AI-generated insights on future market trends</li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            show_upgrade_prompt("predictive analytics", location_id="dashboard_predictive")
+            
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('<div style="height: 20px;"></div>', unsafe_allow_html=True)
     
     # Stock-specific sentiment analysis - styled with neufin card
     st.markdown('<div class="neufin-card">', unsafe_allow_html=True)
