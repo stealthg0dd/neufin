@@ -729,7 +729,10 @@ def show_user_profile_ui():
             if subscription and subscription.is_active:
                 st.write(f"Current plan: **{subscription.level.title()}**")
                 st.write(f"Status: **Active**")
-                st.write(f"Renewal date: **{subscription.end_date.strftime('%Y-%m-%d')}**")
+                if subscription.end_date:
+                    st.write(f"Renewal date: **{subscription.end_date.strftime('%Y-%m-%d')}**")
+                else:
+                    st.write("Renewal date: **Lifetime access**")
                 
                 if subscription.level != "premium":
                     st.button("Upgrade to Premium", on_click=lambda: st.session_state.update({"show_premium_upgrade": True}))
