@@ -286,7 +286,7 @@ def show_payment_success_ui(session_id=None):
             
     if st.button("Go to Dashboard"):
         st.session_state["page"] = "dashboard"
-        st.experimental_rerun()
+        st.rerun()
 
 def show_subscription_management(user_id):
     """
@@ -310,16 +310,19 @@ def show_subscription_management(user_id):
             if st.button("Upgrade to Paid Plan"):
                 st.session_state["redirect_to_payment"] = True
                 st.session_state["payment_plan"] = subscription.level
-                st.experimental_rerun()
+                st.rerun()
         else:
             st.write(f"Status: **Active**")
-            st.write(f"Renewal date: **{subscription.end_date.strftime('%Y-%m-%d')}**")
+            if subscription.end_date:
+                st.write(f"Renewal date: **{subscription.end_date.strftime('%Y-%m-%d')}**")
+            else:
+                st.write("Renewal date: **Lifetime access**")
             
             if subscription.level != "premium":
                 if st.button("Upgrade to Premium"):
                     st.session_state["redirect_to_payment"] = True
                     st.session_state["payment_plan"] = "premium"
-                    st.experimental_rerun()
+                    st.rerun()
             
             if st.button("Cancel Subscription"):
                 st.warning("Are you sure you want to cancel your subscription?")
@@ -340,12 +343,12 @@ def show_subscription_management(user_id):
                             )
                             
                             st.success("Your subscription has been canceled.")
-                            st.experimental_rerun()
+                            st.rerun()
                         except Exception as e:
                             st.error(f"Error canceling subscription: {str(e)}")
                 with col2:
                     if st.button("No, Keep Subscription"):
-                        st.experimental_rerun()
+                        st.rerun()
     else:
         st.write("You don't have an active subscription.")
         
@@ -360,7 +363,7 @@ def show_subscription_management(user_id):
                 if st.button("Choose Basic"):
                     st.session_state["redirect_to_payment"] = True
                     st.session_state["payment_plan"] = "basic"
-                    st.experimental_rerun()
+                    st.rerun()
         
         with col2:
             with st.container():
@@ -373,7 +376,7 @@ def show_subscription_management(user_id):
                 if st.button("Choose Premium"):
                     st.session_state["redirect_to_payment"] = True
                     st.session_state["payment_plan"] = "premium"
-                    st.experimental_rerun()
+                    st.rerun()
         
         if st.button("Start Free Trial"):
             # Start trial logic
@@ -385,4 +388,4 @@ def show_subscription_management(user_id):
                 end_date=end_date
             )
             st.success("Your 14-day free trial has been activated!")
-            st.experimental_rerun()
+            st.rerun()

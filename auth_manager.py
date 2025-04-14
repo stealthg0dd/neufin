@@ -79,12 +79,21 @@ def get_base_url():
     # Default to localhost
     base_url = "http://localhost:5000"
     try:
-        # Check for Replit environment variables first (most reliable for Replit)
+        # Check for REPLIT_DOMAINS first (most reliable for newer Replit)
+        if os.environ.get("REPLIT_DOMAINS"):
+            domains = os.environ.get("REPLIT_DOMAINS")
+            # The first domain in the list is the primary one
+            primary_domain = domains.split(",")[0] if "," in domains else domains
+            base_url = f"https://{primary_domain}"
+            print(f"Using Replit domains URL: {base_url}")
+            return base_url
+            
+        # Check for Replit classic environment variables
         if os.environ.get("REPL_SLUG") and os.environ.get("REPL_OWNER"):
             slug = os.environ.get("REPL_SLUG")
             owner = os.environ.get("REPL_OWNER")
             base_url = f"https://{slug}.{owner}.repl.co"
-            print(f"Using Replit environment URL: {base_url}")
+            print(f"Using Replit classic URL: {base_url}")
             return base_url
         
         # For Replit deployments
