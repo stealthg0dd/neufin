@@ -674,8 +674,16 @@ def integrate_price_prediction(sentiment_prediction, historical_prices):
         # Get the last known price
         last_price = historical_prices['Close'].iloc[-1]
         
-        # Create forecast
-        dates = predictions['date'].tolist()
+        # Create forecast - ensure dates are in datetime format
+        # Fix for 'date' attribute error - ensure date column exists and convert to datetime if needed
+        if 'date' in predictions.columns:
+            # Convert to datetime if it's not already
+            if not pd.api.types.is_datetime64_any_dtype(predictions['date']):
+                predictions['date'] = pd.to_datetime(predictions['date'])
+            dates = predictions['date'].tolist()
+        else:
+            # Fallback if date column is missing or named differently
+            dates = [datetime.now() + timedelta(days=i) for i in range(len(predictions))]
         
         # Simple model: price change proportional to sentiment
         # Positive sentiment -> price goes up, negative -> price goes down
