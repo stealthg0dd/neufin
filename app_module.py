@@ -38,6 +38,9 @@ from data_fetcher import fetch_stock_data, fetch_market_news, fetch_sector_perfo
 # Import investment advisor modules
 from investment_advisor import get_stock_recommendations, analyze_global_trade_impact, get_sector_insights
 
+# Import financial snapshot generator
+from financial_snapshot import create_financial_snapshot
+
 # Import AI analysis modules
 from ai_analyst import generate_investment_thesis, generate_sector_outlook, analyze_global_trade_conditions
 
