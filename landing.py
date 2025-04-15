@@ -468,9 +468,25 @@ def landing_page():
     
     # Submit button with unique key - Get Started comes first now
     unique_submit_key = f"submit_button_{int(time.time())}"
-    if st.button("🚀 Get Started", key=unique_submit_key, on_click=handle_submit, type="primary", use_container_width=True):
-        # The logic is handled in the handle_submit function
-        pass
+    if st.button("🚀 Get Started", key=unique_submit_key, type="primary", use_container_width=True):
+        # Override the on_click approach with direct implementation
+        email = st.session_state.email_input
+        if not email or not isinstance(email, str) or len(email.strip()) == 0:
+            st.session_state.valid_email = False
+            print("Email validation failed: Empty email")
+        else:
+            pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+            if re.match(pattern, email):
+                st.session_state.valid_email = True
+                st.session_state.submitted = True
+                st.session_state.email_prefill = email
+                st.session_state.redirect_email = email
+                st.session_state.show_auth = True
+                print(f"Email validation successful: {email}")
+                st.rerun()
+            else:
+                st.session_state.valid_email = False
+                print(f"Email validation failed: Invalid format: {email}")
         
     st.markdown('<div style="margin-bottom: 15px;"></div>', unsafe_allow_html=True)
     
@@ -484,9 +500,8 @@ def landing_page():
         unique_assistant_key = f"ai_assistant_button_{int(time.time())}"
         if st.button("AI Assistant", key=unique_assistant_key, use_container_width=True):
             # Set session state variables for AI Assistant
-            st.session_state.show_ai_assistant = True
-            # Important: don't set show_auth=True as we're not going to login page
-            print("AI Assistant button clicked!")
+            st.session_state["show_ai_assistant"] = True
+            print("AI Assistant button clicked! Setting show_ai_assistant=True")
             st.rerun()
     
     # Add options section with demo and login
@@ -497,18 +512,17 @@ def landing_page():
         unique_demo_key = f"try_demo_button_{int(time.time())}"
         if st.button("👀 Try a Demo", key=unique_demo_key, use_container_width=True):
             # Set flag and print a debug message
-            st.session_state.show_demo = True
-            print("Demo button clicked! Setting show_demo to True")
-            # Force rerun to apply the change
-            st.rerun()
+            st.session_state["show_demo"] = True
+            print("Demo button clicked! Setting show_demo=True")
+            st.experimental_rerun()
             
     with col2:
         unique_login_key = f"login_button_{int(time.time())}"
         if st.button("🔑 Login", key=unique_login_key, use_container_width=True):
             # Direct implementation instead of using on_click
-            st.session_state.show_auth = True
-            print("Login button clicked! Setting show_auth to True")
-            st.rerun()
+            st.session_state["show_auth"] = True
+            print("Login button clicked! Setting show_auth=True")
+            st.experimental_rerun()
             
     st.markdown('</div>', unsafe_allow_html=True)
     
