@@ -369,11 +369,16 @@ def show_demo_showcase():
     with col2:
         if st.button("📝 Sign Up Now", key="register_from_demo", type="primary", use_container_width=True):
             st.session_state.show_demo = False
+            st.session_state.show_auth = True
+            print("Register from demo clicked! Redirecting to auth page")
+            st.rerun()
 
 # Function to redirect to login
 def show_login():
     """Redirect to login page by setting session state"""
     st.session_state.show_auth = True
+    print("show_login() called! Setting show_auth to True")
+    st.rerun()
     
 # Create the landing page layout
 def landing_page():
@@ -514,7 +519,7 @@ def landing_page():
             # Set flag and print a debug message
             st.session_state["show_demo"] = True
             print("Demo button clicked! Setting show_demo=True")
-            st.experimental_rerun()
+            st.rerun()
             
     with col2:
         unique_login_key = f"login_button_{int(time.time())}"
@@ -522,7 +527,7 @@ def landing_page():
             # Direct implementation instead of using on_click
             st.session_state["show_auth"] = True
             print("Login button clicked! Setting show_auth=True")
-            st.experimental_rerun()
+            st.rerun()
             
     st.markdown('</div>', unsafe_allow_html=True)
     
