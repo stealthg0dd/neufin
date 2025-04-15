@@ -898,17 +898,18 @@ def show_navigation():
     
     st.markdown("---")
 
-# Mercury-inspired navigation at the top
+# Mercury-inspired navigation at the top with Neufin logo
 st.markdown("""
 <div class="mercury-nav">
     <div class="mercury-nav-logo">
-        <span style="color: #7B68EE; font-weight: 700; font-size: 20px;">🔮 NEUFIN</span>
+        <img src="data:image/jpeg;base64,""" + open('neufin_logo_base64.txt', 'r').read() + """" class="neufin-main-logo" alt="Neufin AI Logo">
     </div>
     <div class="mercury-nav-menu">
         <div class="mercury-nav-menu-item active" onclick="navClick('dashboard')" id="nav-dashboard">Dashboard</div>
         <div class="mercury-nav-menu-item" onclick="navClick('markets')" id="nav-markets">Markets</div>
         <div class="mercury-nav-menu-item" onclick="navClick('portfolio')" id="nav-portfolio">Portfolio</div>
         <div class="mercury-nav-menu-item" onclick="navClick('insights')" id="nav-insights">Insights</div>
+        <div class="mercury-nav-menu-item" onclick="navClick('about')" id="nav-about">About</div>
     </div>
 </div>
 
@@ -1089,6 +1090,11 @@ st.markdown("""
     .mercury-nav-logo {
         display: flex;
         align-items: center;
+    }
+    
+    .neufin-main-logo {
+        height: 60px;
+        margin-right: 15px;
     }
     
     .mercury-nav-menu {
@@ -1517,12 +1523,11 @@ st.markdown("""
 
 # Sidebar for filters, inputs, and account features
 with st.sidebar:
-    # Mercury-style branding
+    # Mercury-style branding with Neufin logo
     st.markdown("""
     <div class="mercury-sidebar-brand">
-        <div class="mercury-logo">🔮</div>
+        <img src="data:image/jpeg;base64,""" + open('neufin_logo_base64.txt', 'r').read() + """" class="neufin-sidebar-logo" alt="Neufin AI Logo">
         <div class="mercury-brand-text">
-            <div class="mercury-brand-name">NEUFIN</div>
             <div class="mercury-brand-tagline">FINANCIAL INTELLIGENCE</div>
         </div>
     </div>
@@ -1536,10 +1541,9 @@ with st.sidebar:
             border-bottom: 1px solid #2A2D3A;
         }
         
-        .mercury-logo {
-            font-size: 28px;
+        .neufin-sidebar-logo {
+            width: 80px;
             margin-right: 10px;
-            color: #7B68EE;
         }
         
         .mercury-brand-text {
@@ -1826,10 +1830,13 @@ with st.sidebar:
     st.markdown('<h3 style="color: #7B68EE; margin-bottom: 15px;">About Neufin</h3>', unsafe_allow_html=True)
     st.markdown("""
     <p style="font-size: 14px; margin-bottom: 10px;">
-    Neufin leverages quantum-inspired algorithms and neural networks to analyze financial markets 
-    in real-time. Our sentiment analysis ranges from -1 (bearish) to +1 (bullish).
+    Neufin is a cutting-edge financial intelligence platform powered by AI and designed to transform the way individuals and institutions interact with markets. Built to deliver real-time sentiment insights, predictive analytics, and personalized investment intelligence, Neufin empowers users to make smarter, data-driven financial decisions.
     </p>
     
+    <p style="font-size: 14px; margin-bottom: 15px;">
+    With an intuitive dark-themed interface and a vision to democratize advanced market tools, Neufin stands at the intersection of technology, finance, and user-centric design. It is a unit of Ctech Ventures, and officially operates under Neufin OÜ, a legally registered entity in Estonia.
+    </p>
+
     <div style="margin-top: 15px; border-left: 3px solid #7B68EE; padding-left: 10px;">
         <p style="font-size: 13px; color: #AAA;">
         <strong style="color: #7B68EE;">Premium Features:</strong><br>
@@ -1838,6 +1845,11 @@ with st.sidebar:
         • Detailed sector forecasting<br>
         • Personalized portfolio insights
         </p>
+    </div>
+    
+    <div style="margin-top: 20px; font-size: 12px; color: #888; border-top: 1px solid #2A2D3A; padding-top: 15px;">
+        <p>The registered address for Neufin OÜ – A Unit of Ctech Ventures is Järvevana tee 9, 11314, Tallinn, Estonia.</p>
+        <p style="margin-top: 8px;">© 2025 Neufin OÜ. All rights reserved. Registered in Estonia.</p>
     </div>
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
