@@ -667,10 +667,11 @@ def landing_page():
     # Email form
     st.markdown('<div class="landing-form">', unsafe_allow_html=True)
     
-    # Email input field
+    # Email input field with unique key
     st.markdown('<div class="input-container">', unsafe_allow_html=True)
+    unique_email_key = f"landing_email_input_{int(time.time())}"
     email = st.text_input("Email address", 
-                         key="landing_email_input", 
+                         key=unique_email_key, 
                          placeholder="Enter your email",
                          label_visibility="collapsed")
     st.session_state.email_input = email  # Sync with the expected session state variable
@@ -680,8 +681,9 @@ def landing_page():
     if not st.session_state.valid_email:
         st.markdown('<div class="error-message" style="display: block;">Please enter a valid email address</div>', unsafe_allow_html=True)
     
-    # Submit button
-    if st.button("🚀 Get Started", key="submit_button", on_click=handle_submit, type="primary", use_container_width=True):
+    # Submit button with unique key
+    unique_submit_key = f"submit_button_{int(time.time())}"
+    if st.button("🚀 Get Started", key=unique_submit_key, on_click=handle_submit, type="primary", use_container_width=True):
         # The logic is handled in the handle_submit function
         pass
     
@@ -690,12 +692,14 @@ def landing_page():
     col1, col2 = st.columns(2)
     
     with col1:
-        if st.button("👀 Try a Demo", key="try_demo_button", use_container_width=True):
+        unique_demo_key = f"try_demo_button_{int(time.time())}"
+        if st.button("👀 Try a Demo", key=unique_demo_key, use_container_width=True):
             st.session_state.show_demo = True
             st.rerun()
             
     with col2:
-        if st.button("🔑 Login", key="login_button", use_container_width=True, on_click=show_login):
+        unique_login_key = f"login_button_{int(time.time())}"
+        if st.button("🔑 Login", key=unique_login_key, use_container_width=True, on_click=show_login):
             # Logic handled in show_login
             pass
             
