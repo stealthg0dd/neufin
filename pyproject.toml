@@ -27,6 +27,9 @@ dependencies = [
     "google-auth>=2.38.0",
     "google-auth-oauthlib>=1.2.1",
     "requests-oauthlib>=2.0.0",
+    "langchain-community>=0.3.21",
+    "langchain>=0.3.23",
+    "langchain-openai>=0.3.12",
 ]
 
 [[tool.uv.index]]

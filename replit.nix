@@ -1,5 +1,6 @@
 {pkgs}: {
   deps = [
+    pkgs.bash
     pkgs.zip
     pkgs.rustc
     pkgs.libiconv
