@@ -1,25 +1,22 @@
 import streamlit as st
 
-# Page configuration - must be the first Streamlit command
-st.set_page_config(
-    page_title="Neufin AI - Neural Powered Finance Unlocked",
-    page_icon="🔮",
-    layout="wide",
-    menu_items={
-        'About': "# Neufin AI\nNeural powered finance unlocked. Cutting-edge market sentiment analysis using advanced AI."
-    }
-)
+# This will be imported from main.py, so don't set page config here
 
-# Add SEO meta tags for better search engine visibility
-st.markdown("""
-    <meta name="description" content="Neufin AI - Neural powered finance unlocked. Market sentiment analysis platform using advanced AI and real-time data.">
-    <meta name="keywords" content="financial AI, market sentiment, neural networks, finance, investment, stock analysis, AI investing, financial dashboard, neural powered finance">
-    <meta name="author" content="Neufin OÜ">
-    <meta property="og:title" content="Neufin AI - Neural Powered Finance Unlocked">
-    <meta property="og:description" content="Cutting-edge market sentiment analysis platform powered by advanced AI and real-time data for smart investment decisions.">
-    <meta property="og:type" content="website">
-    <!-- Google Analytics tracking code would go here -->
-""", unsafe_allow_html=True)
+# Apply custom styling for the dashboard
+def apply_dashboard_styling():
+    """Apply custom styling for the dashboard"""
+    st.markdown("""
+    <style>
+        .dark-ui {
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+        
+        .block-container {
+            padding-top: 2rem;
+        }
+    </style>
+    """, unsafe_allow_html=True)
 
 import pandas as pd
 import plotly.express as px
@@ -3717,21 +3714,42 @@ if (st.session_state.auto_refresh and
     # Visual indicator for real-time refresh
     st.toast(f"🔄 Data refreshed automatically at {datetime.now().strftime('%H:%M:%S')}", icon="🔄")
 
-# Check if demo showcase mode is enabled
-if st.session_state.show_demo:
-    # Show the demo showcase instead of the regular dashboard
-    load_demo_showcase()
-else:
-    # Regular dashboard flow
-    if st.session_state.refresh_data:
-        with st.spinner("Refreshing data in real-time..."):
-            load_dashboard()
-            # Reset the refresh flag after loading
-            st.session_state.refresh_data = False
-            # Update the last update timestamp
-            st.session_state.last_update = datetime.now()
+# Function to run the dashboard from main.py
+def run_dashboard():
+    """Main dashboard function that can be called from main.py"""
+    # Apply dashboard styling first
+    apply_dashboard_styling()
+    
+    # Check if demo showcase mode is enabled
+    if st.session_state.get("show_demo", False):
+        # Show the demo showcase instead of the regular dashboard
+        load_demo_showcase()
     else:
-        load_dashboard()
+        # Regular dashboard flow
+        if st.session_state.get("refresh_data", False):
+            with st.spinner("Refreshing data in real-time..."):
+                load_dashboard()
+                # Reset the refresh flag after loading
+                st.session_state.refresh_data = False
+                # Update the last update timestamp
+                st.session_state.last_update = datetime.now()
+        else:
+            load_dashboard()
+            
+    # Add automatic refresh behavior
+    if st.session_state.get("auto_refresh", False):
+        # Calculate time to wait before next refresh
+        seconds_since_refresh = (datetime.now() - st.session_state.last_auto_refresh).total_seconds()
+        seconds_until_refresh = max(1, min(10, st.session_state.refresh_interval - seconds_since_refresh))
+        
+        # Only rerun if we're more than 80% of the way to the next refresh
+        # This prevents too frequent reruns while still maintaining real-time updates
+        if seconds_since_refresh > (st.session_state.refresh_interval * 0.8):
+            time.sleep(1)  # Small delay to prevent excessive reruns
+            st.rerun()
+    
+    # Add footer content
+    add_footer()
     
 # Set up automatic rerun for real-time updates if enabled
 if st.session_state.auto_refresh:
@@ -3745,11 +3763,14 @@ if st.session_state.auto_refresh:
         time.sleep(1)  # Small delay to prevent excessive reruns
         st.rerun()
 
-# Add spacer and commercial footer with Neufin branding
-st.markdown('<div style="height: 40px;"></div>', unsafe_allow_html=True)
-
-# Commercial footer with futuristic dark theme
-st.markdown("""
+# Function to add the footer to the app
+def add_footer():
+    """Add the branding footer to the application"""
+    # Add spacer and commercial footer with Neufin branding
+    st.markdown('<div style="height: 40px;"></div>', unsafe_allow_html=True)
+    
+    # Commercial footer with futuristic dark theme
+    st.markdown("""
 <div class="neufin-card premium-features">
     <div style="text-align:center; margin-bottom: 20px;">
         <img src="data:image/png;base64,""" + open('neufin_new_logo_base64.txt', 'r').read() + """" class="neufin-footer-logo" alt="Neufin AI Logo">
