@@ -4,17 +4,6 @@ from datetime import datetime
 import os
 import re
 
-# Set page config - must be the first Streamlit command
-st.set_page_config(
-    page_title="Neufin AI - Neural Powered Finance Unlocked",
-    page_icon="🔮",
-    layout="centered",
-    initial_sidebar_state="collapsed",
-    menu_items={
-        'About': "# Neufin AI\nNeural powered finance unlocked. Cutting-edge market sentiment analysis using advanced AI."
-    }
-)
-
 # Add SEO meta tags
 st.markdown("""
     <meta name="description" content="Neufin AI - Neural powered finance unlocked. Market sentiment analysis platform using advanced AI and real-time data.">
@@ -273,7 +262,8 @@ def handle_submit():
         st.session_state.valid_email = True
         # Redirect to the main app with email parameter
         # In a production app, we would use a proper auth flow here
-        st.experimental_set_query_params(redirect_to="signup", email=email)
+        st.query_params.redirect_to = "signup"
+        st.query_params.email = email
         st.rerun()
     else:
         st.session_state.valid_email = False
@@ -322,9 +312,6 @@ def landing_page():
     st.markdown('<div class="landing-footer">Neufin OÜ · A Unit of Ctech Ventures · info@ctechventure.com</div>', unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
-
-# Check for redirects from main app
-query_params = st.experimental_get_query_params()
 
 # Main entry point
 landing_page()

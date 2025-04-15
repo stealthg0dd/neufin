@@ -3,6 +3,17 @@ import os
 import time
 from datetime import datetime
 
+# Set page config first before any other Streamlit commands
+st.set_page_config(
+    page_title="Neufin AI - Neural Powered Finance Unlocked",
+    page_icon="🔮",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+    menu_items={
+        'About': "# Neufin AI\nNeural powered finance unlocked. Cutting-edge market sentiment analysis using advanced AI."
+    }
+)
+
 # Import landing page
 from landing import landing_page
 # Import auth modules
@@ -41,17 +52,6 @@ def main():
     
     # Initialize other session state
     init_session_state()
-    
-    # Set page config
-    st.set_page_config(
-        page_title="Neufin AI - Neural Powered Finance Unlocked",
-        page_icon="🔮",
-        layout="wide",
-        initial_sidebar_state="collapsed",
-        menu_items={
-            'About': "# Neufin AI\nNeural powered finance unlocked. Cutting-edge market sentiment analysis using advanced AI."
-        }
-    )
     
     # Add SEO meta tags
     st.markdown("""
