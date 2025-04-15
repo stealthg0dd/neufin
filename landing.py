@@ -373,6 +373,8 @@ def init_landing_session_state():
         st.session_state.redirect_email = ""
     if 'show_demo' not in st.session_state:
         st.session_state.show_demo = False
+    if 'show_ai_assistant' not in st.session_state:
+        st.session_state.show_ai_assistant = False
     if 'sentiment_value' not in st.session_state:
         st.session_state.sentiment_value = 0.65  # Default positive sentiment
     if 'sentiment_trend' not in st.session_state:
@@ -387,17 +389,23 @@ def handle_submit():
     """Handle email form submission with validation and redirection"""
     email = st.session_state.email_input
     if is_valid_email(email):
+        # Set required session state variables for redirection
         st.session_state.submitted = True
         st.session_state.valid_email = True
         st.session_state.redirect_user = True
-        # Prepare redirect - the actual redirect will happen at the end of the script,
-        # not inside this callback
+        st.session_state.email_prefill = email
         st.session_state.redirect_email = email
+        st.session_state.show_auth = True  # This is the key flag needed by simple_app.py
+        
+        # Log the redirection for debugging
+        print(f"Email validation successful. Redirecting with email: {email}")
         
         # Force an immediate rerun to trigger the redirect logic
         st.rerun()
     else:
+        # Simply mark the email as invalid - we'll show an error message
         st.session_state.valid_email = False
+        print(f"Email validation failed for: {email}")
 
 # Function to format sentiment score
 def format_sentiment_score(score):
@@ -713,6 +721,21 @@ def landing_page():
     # Show error message if email is invalid
     if not st.session_state.valid_email:
         st.markdown('<div class="error-message" style="display: block;">Please enter a valid email address</div>', unsafe_allow_html=True)
+    
+    # Add AI Assistant option
+    ai_assistant_col1, ai_assistant_col2 = st.columns([3, 1])
+    with ai_assistant_col1:
+        st.markdown('<div style="display: flex; align-items: center;">', unsafe_allow_html=True)
+        st.markdown('<span style="margin-right: 10px;">✨ Try our AI Assistant</span>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+    with ai_assistant_col2:
+        unique_assistant_key = f"ai_assistant_button_{int(time.time())}"
+        if st.button("AI Assistant", key=unique_assistant_key, use_container_width=True):
+            st.session_state.show_ai_assistant = True
+            st.session_state.show_auth = True
+            st.rerun()
+            
+    st.markdown('<div style="margin-bottom: 15px;"></div>', unsafe_allow_html=True)
     
     # Submit button with unique key
     unique_submit_key = f"submit_button_{int(time.time())}"

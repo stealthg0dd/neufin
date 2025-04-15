@@ -118,8 +118,22 @@ def main():
         </div>
         """.format(st.session_state.get("last_update", datetime.now()).strftime("%Y-%m-%d %H:%M:%S")), unsafe_allow_html=True)
     else:
-        # Check if there are any redirects from the landing page
-        if "show_auth" in st.session_state and st.session_state.show_auth:
+        # Check if the user wants to see the demo
+        if "show_demo" in st.session_state and st.session_state.show_demo:
+            # This means a user clicked the "Try a Demo" button
+            # Import the dashboard function from app_module to avoid circular imports
+            from app_module import run_dashboard
+            # Run the dashboard in demo mode
+            run_dashboard()
+        # Check if user wants to see the AI Assistant directly
+        elif "show_ai_assistant" in st.session_state and st.session_state.show_ai_assistant:
+            # This means a user clicked the "AI Assistant" button
+            # Import the dashboard function and go directly to AI assistant tab
+            from app_module import run_dashboard
+            st.session_state.current_page = "ai_assistant"  # Set the tab to AI Assistant
+            run_dashboard()
+        # Check if there are any redirects from the landing page for authentication
+        elif "show_auth" in st.session_state and st.session_state.show_auth:
             # This means a user has clicked the login button or submitted their email
             if "email_prefill" in st.session_state:
                 # If we have an email from the form, prefill it
