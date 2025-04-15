@@ -3231,6 +3231,7 @@ st.markdown("""
         <button class="tab-button active" onclick="activateTab(event, 'tab-recommendations')">Investment Recommendations</button>
         <button class="tab-button" onclick="activateTab(event, 'tab-sectors')">Sector Insights</button>
         <button class="tab-button" onclick="activateTab(event, 'tab-global')">Global Trade Analysis</button>
+        <button class="tab-button" onclick="activateTab(event, 'tab-assistant')">AI Assistant</button>
     </div>
 </div>
 

@@ -607,7 +607,7 @@ def landing_page():
     # Login button in the top right corner
     st.markdown("""
     <div style="position: absolute; top: 20px; right: 30px;">
-        <button onclick="document.getElementById('topnav-login-btn').click();" 
+        <button onclick="document.getElementById('navtop-login-btn').click();" 
                 style="background: transparent; color: #7B68EE; border: 1px solid #7B68EE; 
                        border-radius: 4px; padding: 5px 15px; cursor: pointer; font-weight: 500;">
             Login
@@ -616,7 +616,7 @@ def landing_page():
     """, unsafe_allow_html=True)
     
     # Hidden button to trigger login (using a more unique key)
-    if st.button("Show Login", key="topnav-login-btn", on_click=show_login):
+    if st.button("Show Login", key="navtop-login-btn", on_click=show_login):
         pass
     
     # Logo
