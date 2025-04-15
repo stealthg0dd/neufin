@@ -541,25 +541,40 @@ def require_permission(permission):
     return decorator
 
 def show_login_ui():
-    """Display login UI"""
+    """Display login UI with support for prefilled email from landing page"""
+    # Check if we have auth_mode and prefill_email in session state
+    if "auth_mode" not in st.session_state:
+        st.session_state["auth_mode"] = "login"
+    if "prefill_email" not in st.session_state:
+        st.session_state["prefill_email"] = ""
     col1, col2 = st.columns(2)
     
-    with col1:
+    # Show tab for login or register based on auth_mode
+    tab_index = 0 if st.session_state["auth_mode"] == "login" else 1
+    auth_tabs = st.tabs(["Login", "Register"])
+    
+    with auth_tabs[0]:  # Login tab
         st.subheader("Login")
         login_form = st.form("login_form")
-        email = login_form.text_input("Email", key="login_email")
+        # Prepopulate email if coming from landing page
+        prefill_email = st.session_state.get("prefill_email", "")
+        email = login_form.text_input("Email", value=prefill_email if tab_index == 0 else "", key="login_email")
         password = login_form.text_input("Password", type="password", key="login_password")
         submit = login_form.form_submit_button("Login")
         
         if submit:
             if login_user(email, password):
+                # Clear prefill email if successful
+                st.session_state["prefill_email"] = ""
                 st.rerun()
     
-    with col2:
+    with auth_tabs[1]:  # Register tab
         st.subheader("Register")
         reg_form = st.form("register_form")
         username = reg_form.text_input("Username", key="register_username")
-        email = reg_form.text_input("Email", key="register_email")
+        # Prepopulate email if coming from landing page
+        prefill_email = st.session_state.get("prefill_email", "")
+        email = reg_form.text_input("Email", value=prefill_email if tab_index == 1 else "", key="register_email")
         password = reg_form.text_input("Password", type="password", key="register_password")
         confirm_password = reg_form.text_input("Confirm Password", type="password", key="register_confirm_password")
         submit = reg_form.form_submit_button("Register")
@@ -568,6 +583,8 @@ def show_login_ui():
             if password != confirm_password:
                 st.error("Passwords do not match!")
             elif register_user(username, email, password):
+                # Clear prefill email if successful
+                st.session_state["prefill_email"] = ""
                 st.rerun()
                 
     # Social login options

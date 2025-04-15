@@ -87,6 +87,18 @@ USE_ADVANCED_AI = bool(OPENAI_API_KEY)
 # Initialize authentication session state
 init_auth_session()
 
+# Check if we're coming from the landing page with an email for signup
+query_params = st.query_params
+if "redirect_to" in query_params and query_params["redirect_to"] == "signup" and "email" in query_params:
+    email = query_params["email"]
+    # Set up registration flow with prefilled email
+    st.session_state["show_auth"] = True
+    st.session_state["auth_mode"] = "register"
+    st.session_state["prefill_email"] = email
+    # Clear the query params to avoid infinite redirects
+    st.query_params.clear()
+    st.rerun()
+
 # Check if user has access to specific features based on subscription level
 def check_feature_access(feature):
     """
