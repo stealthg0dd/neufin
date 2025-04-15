@@ -352,6 +352,9 @@ st.markdown("""
 
 # Function to validate email
 def is_valid_email(email):
+    """Validate email address format"""
+    if not email or not isinstance(email, str) or len(email.strip()) == 0:
+        return False
     pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
     return re.match(pattern, email) is not None
 
@@ -381,6 +384,7 @@ def init_landing_session_state():
 
 # Handle form submission
 def handle_submit():
+    """Handle email form submission with validation and redirection"""
     email = st.session_state.email_input
     if is_valid_email(email):
         st.session_state.submitted = True
@@ -389,6 +393,9 @@ def handle_submit():
         # Prepare redirect - the actual redirect will happen at the end of the script,
         # not inside this callback
         st.session_state.redirect_email = email
+        
+        # Force an immediate rerun to trigger the redirect logic
+        st.rerun()
     else:
         st.session_state.valid_email = False
 
@@ -604,31 +611,51 @@ def landing_page():
     # Main container
     st.markdown('<div class="landing-container">', unsafe_allow_html=True)
     
-    # Login button in the top right corner
+    # Login button in the top right corner - will use the dynamically generated key
     st.markdown("""
     <div style="position: absolute; top: 20px; right: 30px;">
-        <button onclick="document.getElementById('login-trigger').click();" 
+        <button id="header-login-button" 
                 style="background: transparent; color: #7B68EE; border: 1px solid #7B68EE; 
                        border-radius: 4px; padding: 5px 15px; cursor: pointer; font-weight: 500;">
             Login
         </button>
     </div>
+    <script>
+        // Add click handler after page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('header-login-button').addEventListener('click', function() {
+                // Find all buttons and click the first one that has the login-trigger in its key
+                const buttons = document.querySelectorAll('[data-testid="baseButton-secondary"]');
+                for (let button of buttons) {
+                    if (button.getAttribute('key') && button.getAttribute('key').includes('login-trigger')) {
+                        button.click();
+                        break;
+                    }
+                }
+            });
+        });
+    </script>
     """, unsafe_allow_html=True)
         
     # Store login function in session state
     if 'show_login_function' not in st.session_state:
         st.session_state.show_login_function = show_login
         
+    # Generate a unique key for the hidden button
+    import time
+    unique_trigger_key = f"login-trigger-{int(time.time())}"
+    
     # Hidden button for JavaScript to click 
-    if st.button("Login", key="login-trigger", on_click=show_login, help="Login to your account"):
+    if st.button("Login", key=unique_trigger_key, on_click=show_login, help="Login to your account"):
         pass
     
-    # Hide the button with CSS
-    st.markdown("""
+    # Hide the button with CSS and store the key in session state for JS to find
+    st.session_state.login_trigger_key = unique_trigger_key
+    st.markdown(f"""
     <style>
-    [data-testid="baseButton-secondary"][key="login-trigger"] {
+    [data-testid="baseButton-secondary"][key="{unique_trigger_key}"] {{
         display: none !important;
-    }
+    }}
     </style>
     """, unsafe_allow_html=True)
     
@@ -639,7 +666,7 @@ def landing_page():
     st.markdown('<h1 class="landing-title">Neural Powered Finance Unlocked</h1>', unsafe_allow_html=True)
     
     # Subtitle
-    st.markdown('<p class="landing-subtitle">Apply in 10 minutes for an account that transforms how you operate.</p>', unsafe_allow_html=True)
+    st.markdown('<p class="landing-subtitle">Financial Superintelligence in your reach</p>', unsafe_allow_html=True)
     
     # Add sentiment gauge widget
     sentiment_gauge = create_sentiment_gauge(st.session_state.sentiment_value)
