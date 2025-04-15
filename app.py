@@ -2,7 +2,7 @@ import streamlit as st
 
 # Page configuration - must be the first Streamlit command
 st.set_page_config(
-    page_title="Neufin",
+    page_title="Neufin AI - Financial Intelligence",
     page_icon="🔮",
     layout="wide",
 )
@@ -3725,7 +3725,10 @@ st.markdown('<div style="height: 40px;"></div>', unsafe_allow_html=True)
 # Commercial footer with futuristic dark theme
 st.markdown("""
 <div class="neufin-card premium-features">
-    <h3 style="text-align:center; color: #7B68EE; margin-bottom: 20px;">Neufin - AI-Powered Financial Intelligence</h3>
+    <div style="text-align:center; margin-bottom: 20px;">
+        <img src="data:image/jpeg;base64,""" + open('neufin_logo_base64.txt', 'r').read() + """" class="neufin-footer-logo" alt="Neufin AI Logo">
+        <h3 style="color: #7B68EE; margin-top: 15px;">AI-Powered Financial Intelligence</h3>
+    </div>
     <p style="text-align:center; color: #e0e0e0;">
         Unlock the power of AI-driven market analysis. Subscribe to our Premium Plan for advanced insights, personalized recommendations, and global trade impact analysis.
     </p>
@@ -3774,6 +3777,18 @@ st.markdown("""
     color: #e0e0e0;
     font-weight: 500;
 }
+
+.neufin-footer-logo {
+    height: 70px;
+    margin: 0 auto;
+    display: block;
+}
+
+.neufin-small-logo {
+    height: 40px;
+    vertical-align: middle;
+    margin-right: 8px;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -3782,10 +3797,10 @@ st.markdown("""
 <div style="font-size:0.8em; color:#999; text-align:center; margin-top:30px; padding: 0 20px;">
     <p><strong>Disclaimer:</strong> All sentiment analysis and recommendations are powered by AI and should be used for informational purposes only.
     Neufin does not provide financial advice. Investment decisions should be made in consultation with financial professionals.</p>
-    <p>Data source: Yahoo Finance | Last updated: {}</p>
+    <p>Data source: Alpha Vantage | Last updated: {}</p>
     <div style="margin-top: 15px; opacity: 0.7;">
-        <img src="neufin-icon.svg" alt="Neufin" height="24" style="vertical-align: middle; margin-right: 8px;">
-        © 2025 Neufin Financial Intelligence
+        <img src="data:image/jpeg;base64,""" + open('neufin_logo_base64.txt', 'r').read() + """" class="neufin-small-logo" alt="Neufin AI Logo" style="height: 40px; vertical-align: middle; margin-right: 8px;">
+        © 2025 Neufin OÜ | A Unit of Ctech Ventures | Järvevana tee 9, 11314, Tallinn, Estonia
     </div>
 </div>
 """.format(st.session_state.last_update.strftime("%Y-%m-%d %H:%M:%S")), unsafe_allow_html=True)
