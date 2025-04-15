@@ -2,10 +2,24 @@ import streamlit as st
 
 # Page configuration - must be the first Streamlit command
 st.set_page_config(
-    page_title="Neufin AI - Financial Intelligence",
+    page_title="Neufin AI - Neural Powered Finance Unlocked",
     page_icon="🔮",
     layout="wide",
+    menu_items={
+        'About': "# Neufin AI\nNeural powered finance unlocked. Cutting-edge market sentiment analysis using advanced AI."
+    }
 )
+
+# Add SEO meta tags for better search engine visibility
+st.markdown("""
+    <meta name="description" content="Neufin AI - Neural powered finance unlocked. Market sentiment analysis platform using advanced AI and real-time data.">
+    <meta name="keywords" content="financial AI, market sentiment, neural networks, finance, investment, stock analysis, AI investing, financial dashboard, neural powered finance">
+    <meta name="author" content="Neufin OÜ">
+    <meta property="og:title" content="Neufin AI - Neural Powered Finance Unlocked">
+    <meta property="og:description" content="Cutting-edge market sentiment analysis platform powered by advanced AI and real-time data for smart investment decisions.">
+    <meta property="og:type" content="website">
+    <!-- Google Analytics tracking code would go here -->
+""", unsafe_allow_html=True)
 
 import pandas as pd
 import plotly.express as px
@@ -902,7 +916,7 @@ def show_navigation():
 st.markdown("""
 <div class="mercury-nav">
     <div class="mercury-nav-logo">
-        <img src="data:image/jpeg;base64,""" + open('neufin_logo_base64.txt', 'r').read() + """" class="neufin-main-logo" alt="Neufin AI Logo">
+        <img src="data:image/png;base64,""" + open('neufin_new_logo_base64.txt', 'r').read() + """" class="neufin-main-logo" alt="Neufin AI Logo">
     </div>
     <div class="mercury-nav-menu">
         <div class="mercury-nav-menu-item active" onclick="navClick('dashboard')" id="nav-dashboard">Dashboard</div>
@@ -1420,7 +1434,7 @@ st.markdown("""
     <div class="metric-card">
         <div class="metric-card-title">Market Overview</div>
         <div class="metric-card-value">
-            <span style="color:#7B68EE; font-weight:600;">Neufin</span> Financial Intelligence
+            <span style="color:#7B68EE; font-weight:600;">Neufin</span> Neural Powered Finance Unlocked
         </div>
         <p style="margin-top:12px; color:#ADB3C9; font-size:14px;">
             Our platform combines AI analysis with real-time financial data to provide you with the most accurate market insights.
@@ -1526,9 +1540,9 @@ with st.sidebar:
     # Mercury-style branding with Neufin logo
     st.markdown("""
     <div class="mercury-sidebar-brand">
-        <img src="data:image/jpeg;base64,""" + open('neufin_logo_base64.txt', 'r').read() + """" class="neufin-sidebar-logo" alt="Neufin AI Logo">
+        <img src="data:image/png;base64,""" + open('neufin_new_logo_base64.txt', 'r').read() + """" class="neufin-sidebar-logo" alt="Neufin AI Logo">
         <div class="mercury-brand-text">
-            <div class="mercury-brand-tagline">FINANCIAL INTELLIGENCE</div>
+            <div class="mercury-brand-tagline">NEURAL POWERED FINANCE UNLOCKED</div>
         </div>
     </div>
     
@@ -3726,8 +3740,8 @@ st.markdown('<div style="height: 40px;"></div>', unsafe_allow_html=True)
 st.markdown("""
 <div class="neufin-card premium-features">
     <div style="text-align:center; margin-bottom: 20px;">
-        <img src="data:image/jpeg;base64,""" + open('neufin_logo_base64.txt', 'r').read() + """" class="neufin-footer-logo" alt="Neufin AI Logo">
-        <h3 style="color: #7B68EE; margin-top: 15px;">AI-Powered Financial Intelligence</h3>
+        <img src="data:image/png;base64,""" + open('neufin_new_logo_base64.txt', 'r').read() + """" class="neufin-footer-logo" alt="Neufin AI Logo">
+        <h3 style="color: #7B68EE; margin-top: 15px;">Neural Powered Finance Unlocked</h3>
     </div>
     <p style="text-align:center; color: #e0e0e0;">
         Unlock the power of AI-driven market analysis. Subscribe to our Premium Plan for advanced insights, personalized recommendations, and global trade impact analysis.
@@ -3799,7 +3813,7 @@ st.markdown("""
     Neufin does not provide financial advice. Investment decisions should be made in consultation with financial professionals.</p>
     <p>Data source: Alpha Vantage | Last updated: {}</p>
     <div style="margin-top: 15px; opacity: 0.7;">
-        <img src="data:image/jpeg;base64,""" + open('neufin_logo_base64.txt', 'r').read() + """" class="neufin-small-logo" alt="Neufin AI Logo" style="height: 40px; vertical-align: middle; margin-right: 8px;">
+        <img src="data:image/png;base64,""" + open('neufin_new_logo_base64.txt', 'r').read() + """" class="neufin-small-logo" alt="Neufin AI Logo" style="height: 40px; vertical-align: middle; margin-right: 8px;">
         © 2025 Neufin OÜ | A Unit of Ctech Ventures | Järvevana tee 9, 11314, Tallinn, Estonia
     </div>
 </div>
