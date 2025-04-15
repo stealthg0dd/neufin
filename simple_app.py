@@ -118,8 +118,18 @@ def main():
         </div>
         """.format(st.session_state.get("last_update", datetime.now()).strftime("%Y-%m-%d %H:%M:%S")), unsafe_allow_html=True)
     else:
-        # User is not authenticated, show landing page
-        landing_page()
+        # Check if there are any redirects from the landing page
+        if "show_auth" in st.session_state and st.session_state.show_auth:
+            # This means a user has clicked the login button or submitted their email
+            if "email_prefill" in st.session_state:
+                # If we have an email from the form, prefill it
+                if not "email" in st.session_state:
+                    st.session_state.email = st.session_state.email_prefill
+            # Show the login UI with the prefilled email if available
+            show_login_ui()
+        else:
+            # User is not authenticated and no redirects, show landing page
+            landing_page()
         
 # Run the main function if this script is run directly
 if __name__ == "__main__":

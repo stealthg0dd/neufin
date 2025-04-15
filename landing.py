@@ -375,6 +375,9 @@ def init_landing_session_state():
     if 'sentiment_trend' not in st.session_state:
         # Create a sample trend for demonstration
         st.session_state.sentiment_trend = [0.3, 0.35, 0.45, 0.5, 0.55, 0.65, 0.7, 0.65, 0.7, 0.75]
+    # Set a flag to show login UI directly
+    if 'show_login' not in st.session_state:
+        st.session_state.show_login = False
 
 # Handle form submission
 def handle_submit():
@@ -560,16 +563,29 @@ def show_demo_showcase():
         if st.button("📝 Sign Up Now", key="register_from_demo", type="primary", use_container_width=True):
             st.session_state.show_demo = False
 
+# Function to redirect to login
+def show_login():
+    """Redirect to login page by setting session state"""
+    st.session_state.show_auth = True
+    
 # Create the landing page layout
 def landing_page():
     # Initialize session state first
     init_landing_session_state()
     
+    # If show_login is set, redirect to login page
+    if st.session_state.show_login:
+        # Use the auth_manager's show_login_ui
+        from auth_manager import show_login_ui
+        show_login_ui()
+        return
+    
     # Handle redirect if user has submitted a valid email
     if st.session_state.redirect_user and st.session_state.redirect_email:
-        # Set query parameters for redirection
-        st.query_params.redirect_to = "signup"
-        st.query_params.email = st.session_state.redirect_email
+        # Set query parameters for redirection to sign up page
+        st.session_state.show_auth = True  # This will cause simple_app.py to show login UI
+        st.session_state.email_prefill = st.session_state.redirect_email  # For prefilling the email
+        
         # Clear the flag to avoid infinite redirects
         st.session_state.redirect_user = False
         st.rerun()
@@ -587,6 +603,21 @@ def landing_page():
     
     # Main container
     st.markdown('<div class="landing-container">', unsafe_allow_html=True)
+    
+    # Login button in the top right corner
+    st.markdown("""
+    <div style="position: absolute; top: 20px; right: 30px;">
+        <button onclick="document.getElementById('show-login-btn').click();" 
+                style="background: transparent; color: #7B68EE; border: 1px solid #7B68EE; 
+                       border-radius: 4px; padding: 5px 15px; cursor: pointer; font-weight: 500;">
+            Login
+        </button>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Hidden button to trigger login
+    if st.button("Show Login", key="show-login-btn", on_click=show_login):
+        pass
     
     # Logo
     st.markdown(f'<img src="data:image/png;base64,{open("neufin_new_logo_base64.txt", "r").read()}" class="landing-logo" alt="Neufin AI">', unsafe_allow_html=True)
@@ -647,12 +678,38 @@ def landing_page():
         # The logic is handled in the handle_submit function
         pass
     
-    # Add "or try a demo" option
+    # Add options section with demo and login
     st.markdown('<div style="text-align: center; margin-top: 15px;">', unsafe_allow_html=True)
-    if st.button("👀 Try a Demo First", key="try_demo_button"):
-        st.session_state.show_demo = True
-        st.rerun()
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("👀 Try a Demo", key="try_demo_button", use_container_width=True):
+            st.session_state.show_demo = True
+            st.rerun()
+            
+    with col2:
+        if st.button("🔑 Login", key="login_button", use_container_width=True, on_click=show_login):
+            # Logic handled in show_login
+            pass
+            
     st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Add marketplace advantages
+    st.markdown("""
+    <div style="max-width: 600px; margin: 40px auto 0 auto; text-align: center;">
+        <h3 style="color: #e0e0e0; margin-bottom: 15px; font-size: 1.3rem;">Why Choose Neufin</h3>
+        <div style="display: flex; justify-content: space-between; text-align: left;">
+            <div style="flex: 1; padding: 0 10px;">
+                <div style="margin-bottom: 10px;">✅ <span style="font-weight: 500;">Real-time sentiment analysis</span></div>
+                <div style="margin-bottom: 10px;">✅ <span style="font-weight: 500;">Advanced AI predictive models</span></div>
+            </div>
+            <div style="flex: 1; padding: 0 10px;">
+                <div style="margin-bottom: 10px;">✅ <span style="font-weight: 500;">Sector performance tracking</span></div>
+                <div style="margin-bottom: 10px;">✅ <span style="font-weight: 500;">Personalized investment insights</span></div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
     
