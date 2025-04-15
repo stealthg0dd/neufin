@@ -32,10 +32,23 @@ st.markdown("""
 # Main application flow
 if "show_auth" in st.session_state and st.session_state["show_auth"]:
     # Show authentication UI
+    print("Main flow: Redirecting to auth page")
     show_login_ui()
+elif "show_demo" in st.session_state and st.session_state["show_demo"]:
+    # Show demo showcase
+    print("Main flow: Launching demo showcase")
+    # Import the dashboard function and run in demo mode
+    st.session_state["demo_mode"] = True
+    run_dashboard()
+elif "show_ai_assistant" in st.session_state and st.session_state["show_ai_assistant"]:
+    # Show AI Assistant directly
+    print("Main flow: Redirecting to AI Assistant")
+    st.session_state["current_page"] = "ai_assistant"
+    run_dashboard()
 elif is_authenticated():
     # User is authenticated, show dashboard
     run_dashboard()
 else:
     # User is not authenticated, show landing page
+    print("Main flow: Showing landing page")
     landing_page()
