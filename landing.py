@@ -615,8 +615,8 @@ def landing_page():
     </div>
     """, unsafe_allow_html=True)
     
-    # Hidden button to trigger login
-    if st.button("Show Login", key="show-login-btn", on_click=show_login):
+    # Hidden button to trigger login (using a more unique key)
+    if st.button("Show Login", key="topnav-login-btn", on_click=show_login):
         pass
     
     # Logo
