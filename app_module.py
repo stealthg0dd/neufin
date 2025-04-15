@@ -190,7 +190,7 @@ def run_dashboard():
         st.markdown("This is a demonstration of the Neufin AI platform capabilities.")
         
         # Create tabs for different demo features
-        demo_tab1, demo_tab2, demo_tab3 = st.tabs(["Market Sentiment", "Stock Analysis", "AI Assistant"])
+        demo_tab1, demo_tab2, demo_tab3, demo_tab4 = st.tabs(["Market Sentiment", "Stock Analysis", "Financial Snapshot", "AI Assistant"])
         
         with demo_tab1:
             st.markdown("### Market Sentiment Analysis")
@@ -214,6 +214,51 @@ def run_dashboard():
             st.info("DEMO: Based on current market conditions, our AI recommends: Buy AAPL, Hold MSFT, Sell FB")
             
         with demo_tab3:
+            st.markdown("### Financial Snapshot Generator")
+            st.markdown("Create a comprehensive financial snapshot with just one click, featuring interactive elements and AI-powered insights.")
+            
+            # Add a simplified version of the financial snapshot
+            st.markdown("""
+            <div style="background: rgba(30, 30, 30, 0.7); border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid rgba(123, 104, 238, 0.3);">
+                <h4 style="margin-top: 0;">📊 One-Click Financial Snapshot</h4>
+                <div style="margin-bottom: 15px;">
+                    <strong>Stock Symbol:</strong> AAPL &nbsp; | &nbsp; <strong>Time Period:</strong> 1mo
+                </div>
+                <button style="background-color: #7B68EE; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; width: 100%;">
+                    📸 Generate Snapshot
+                </button>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Show features of the financial snapshot
+            st.markdown("#### ✨ Features")
+            feature_cols = st.columns(2)
+            
+            with feature_cols[0]:
+                st.markdown("""
+                * 📈 Interactive stock charts
+                * 🔍 Micro-interactions for data points
+                * 🧠 AI-powered insights
+                """)
+                
+            with feature_cols[1]:
+                st.markdown("""
+                * 💹 Personalized wellness score
+                * 🚀 Financial mood emoji tracker
+                * 🏢 Sector performance context
+                """)
+                
+            # Show a preview of the financial wellness score
+            st.markdown("#### 🧘‍♂️ Preview: Financial Wellness Score")
+            st.markdown("""
+            <div style="background: rgba(0, 0, 0, 0.1); padding: 15px; border-radius: 5px; margin-bottom: 15px; text-align: center;">
+                <div style="font-size: 1.1rem; margin-bottom: 10px;">Financial Wellness Score</div>
+                <div style="font-size: 2.5rem; font-weight: bold; color: #FFD600;">78<span style="font-size: 1.2rem;">/100</span></div>
+                <div style="font-size: 0.9rem; opacity: 0.7; margin-top: 10px;">Based on diversification, risk management, and market timing</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        with demo_tab4:
             st.markdown("### AI Assistant")
             st.markdown("Ask our AI anything about markets, stocks, or investment strategies.")
             
