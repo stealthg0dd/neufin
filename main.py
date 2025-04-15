@@ -30,6 +30,16 @@ st.markdown("""
     <!-- Google Analytics tracking code would go here -->
 """, unsafe_allow_html=True)
 
+# Check query parameters for demo mode
+query_params = st.experimental_get_query_params()
+if 'demo' in query_params and query_params.get('demo', [''])[0] == 'true':
+    # Set the demo flag from query parameters
+    st.session_state["show_demo"] = True
+    st.session_state.show_demo = True
+    print("Main flow: Setting demo mode from query parameters")
+    # Clear the parameter to prevent reuse on refresh
+    st.experimental_set_query_params()
+
 # Main application flow
 if "show_auth" in st.session_state and st.session_state["show_auth"]:
     # Show authentication UI

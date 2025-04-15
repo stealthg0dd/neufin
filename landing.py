@@ -518,7 +518,10 @@ def landing_page():
         if st.button("👀 Try a Demo", key=unique_demo_key, use_container_width=True):
             # Set flag and print a debug message
             st.session_state["show_demo"] = True
+            st.session_state.show_demo = True  # Set both formats for compatibility
             print("Demo button clicked! Setting show_demo=True")
+            # Force redirect to main.py with demo mode
+            st.experimental_set_query_params(demo='true')
             st.rerun()
             
     with col2:
