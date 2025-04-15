@@ -3283,7 +3283,7 @@ function activateTab(evt, tabId) {
 </script>
 """, unsafe_allow_html=True)
 
-recommendation_tab, sector_tab, global_tab = st.tabs(["Investment Recommendations", "Sector Insights", "Global Trade Analysis"])
+recommendation_tab, sector_tab, global_tab, assistant_tab = st.tabs(["Investment Recommendations", "Sector Insights", "Global Trade Analysis", "AI Assistant"])
 
 with recommendation_tab:
     st.markdown('<h3 style="color: #7B68EE;">AI-Powered Investment Recommendations</h3>', unsafe_allow_html=True)

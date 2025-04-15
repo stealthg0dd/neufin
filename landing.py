@@ -607,7 +607,7 @@ def landing_page():
     # Login button in the top right corner
     st.markdown("""
     <div style="position: absolute; top: 20px; right: 30px;">
-        <button onclick="document.getElementById('navtop-login-btn').click();" 
+        <button onclick="document.querySelector('[key*=\'navtop-login-btn\']').click();" 
                 style="background: transparent; color: #7B68EE; border: 1px solid #7B68EE; 
                        border-radius: 4px; padding: 5px 15px; cursor: pointer; font-weight: 500;">
             Login
@@ -615,9 +615,16 @@ def landing_page():
     </div>
     """, unsafe_allow_html=True)
     
-    # Hidden button to trigger login (using a more unique key)
-    if st.button("Show Login", key="navtop-login-btn", on_click=show_login):
+    # Generate a truly unique key with timestamp
+    import time
+    unique_key = f"navtop-login-btn-{int(time.time())}"
+    
+    # Hidden button to trigger login with generated unique key
+    if st.button("Show Login", key=unique_key, on_click=show_login):
         pass
+        
+    # Store the unique key in session state for JavaScript to reference
+    st.session_state.nav_login_btn_id = unique_key
     
     # Logo
     st.markdown(f'<img src="data:image/png;base64,{open("neufin_new_logo_base64.txt", "r").read()}" class="landing-logo" alt="Neufin AI">', unsafe_allow_html=True)
