@@ -354,7 +354,7 @@ def create_financial_snapshot(ticker="AAPL", time_period="1mo", user_data=None):
             
             # Fetch required data
             stock_data = fetch_stock_data(ticker, period=time_period)
-            market_sentiment = get_market_sentiment()
+            market_sentiment = get_market_sentiment("SPY")
             
             # Generate stock sentiment
             stock_sentiment_args = StockData(ticker=ticker, time_period=time_period)

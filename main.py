@@ -1,13 +1,6 @@
 import streamlit as st
-import os
-from landing import landing_page
-from app_module import run_dashboard
-from auth_manager import is_authenticated, show_login_ui, init_auth_session
 
-# Initialize auth session
-init_auth_session()
-
-# Set page config
+# Set page config - MUST be the first Streamlit command
 st.set_page_config(
     page_title="Neufin AI - Neural Powered Finance Unlocked",
     page_icon="🔮",
@@ -17,6 +10,14 @@ st.set_page_config(
         'About': "# Neufin AI\nNeural powered finance unlocked. Cutting-edge market sentiment analysis using advanced AI."
     }
 )
+
+import os
+from landing import landing_page
+from app_module import run_dashboard
+from auth_manager import is_authenticated, show_login_ui, init_auth_session
+
+# Initialize auth session
+init_auth_session()
 
 # Add SEO meta tags
 st.markdown("""
