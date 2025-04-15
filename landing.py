@@ -355,9 +355,20 @@ def is_valid_email(email):
     pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
     return re.match(pattern, email) is not None
 
-# Initialize session state variables
-# Note: we'll now rely on init_session_state() from simple_app.py for this
-# to avoid duplicate initializations
+# Initialize session state variables for landing page
+def init_landing_session_state():
+    """Initialize all session state variables needed for the landing page"""
+    if 'email_input' not in st.session_state:
+        st.session_state.email_input = ""
+    if 'submitted' not in st.session_state:
+        st.session_state.submitted = False
+    if 'valid_email' not in st.session_state:
+        st.session_state.valid_email = True
+    if 'sentiment_value' not in st.session_state:
+        st.session_state.sentiment_value = 0.65  # Default positive sentiment
+    if 'sentiment_trend' not in st.session_state:
+        # Create a sample trend for demonstration
+        st.session_state.sentiment_trend = [0.3, 0.35, 0.45, 0.5, 0.55, 0.65, 0.7, 0.65, 0.7, 0.75]
 
 # Handle form submission
 def handle_submit():
@@ -464,6 +475,9 @@ def create_sentiment_trend(values):
 
 # Create the landing page layout
 def landing_page():
+    # Initialize session state first
+    init_landing_session_state()
+    
     # Decorative elements
     st.markdown('<div class="stars"></div>', unsafe_allow_html=True)
     st.markdown('<div class="decoration decoration-1"></div>', unsafe_allow_html=True)
