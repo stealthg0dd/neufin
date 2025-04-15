@@ -3711,6 +3711,92 @@ with global_tab:
             st.error(f"Error analyzing global trade conditions: {str(e)}")
     # The else block is removed as we already show the upgrade prompt at the beginning
 
+# AI Assistant tab implementation
+with assistant_tab:
+    st.markdown('<h3 style="color: #7B68EE;">Neufin AI Assistant</h3>', unsafe_allow_html=True)
+    
+    # Check if user has access to premium features
+    need_upgrade = show_upgrade_prompt("AI Assistant", "premium", "assistant_tab")
+    if not need_upgrade:
+        try:
+            # Import agent functionality
+            from agent import run_neufin_agent, reset_agent_memory
+            
+            # Create a container for the chat interface
+            chat_container = st.container()
+            
+            with chat_container:
+                # Initialize chat history in session state if not present
+                if "ai_assistant_messages" not in st.session_state:
+                    st.session_state.ai_assistant_messages = []
+                
+                # Display intro message
+                if not st.session_state.ai_assistant_messages:
+                    st.markdown("""
+                    <div style="padding: 15px; border-radius: 10px; background-color: rgba(123, 104, 238, 0.1); margin-bottom: 20px;">
+                        <h4 style="color: #7B68EE; margin-top: 0;">Welcome to Neufin AI Assistant</h4>
+                        <p>I'm your personal financial intelligence assistant powered by advanced AI models. Ask me about:</p>
+                        <ul>
+                            <li>Current market sentiment for specific stocks</li>
+                            <li>Investment recommendations based on real-time data</li>
+                            <li>Analysis of sector performance</li>
+                            <li>Insights on global trade factors affecting markets</li>
+                            <li>Explanations of financial concepts and terms</li>
+                        </ul>
+                        <p>I can access real-time market data and use advanced AI to provide personalized financial insights.</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # Display chat messages
+                for message in st.session_state.ai_assistant_messages:
+                    with st.chat_message(message["role"]):
+                        st.markdown(message["content"])
+                
+                # Add a reset button for the conversation
+                col1, col2 = st.columns([3, 1])
+                with col2:
+                    if st.button("Reset Conversation", key="reset_conversation"):
+                        reset_agent_memory()
+                        st.session_state.ai_assistant_messages = []
+                        st.rerun()
+                
+                # User input
+                prompt = st.chat_input("Ask anything about markets, investments, or financial data...")
+                
+                if prompt:
+                    # Add user message to chat history
+                    st.session_state.ai_assistant_messages.append({"role": "user", "content": prompt})
+                    
+                    # Display user message
+                    with st.chat_message("user"):
+                        st.markdown(prompt)
+                    
+                    # Display assistant response
+                    with st.chat_message("assistant"):
+                        response_container = st.empty()
+                        ai_response = run_neufin_agent(prompt, response_container)
+                        
+                        if ai_response:
+                            # Add assistant response to chat history
+                            if "output" in ai_response:
+                                st.session_state.ai_assistant_messages.append({"role": "assistant", "content": ai_response["output"]})
+            
+            # Add example queries
+            with st.expander("Example Questions"):
+                st.markdown("""
+                - What's the current market sentiment for Apple (AAPL)?
+                - Can you analyze the technology sector performance?
+                - What global trade factors are impacting markets today?
+                - Give me investment recommendations for growth stocks.
+                - How does inflation affect stock valuations?
+                - What are the best performing sectors this month?
+                - What's your analysis of Microsoft (MSFT) stock?
+                """)
+                
+        except Exception as e:
+            st.error(f"Error with AI Assistant: {str(e)}")
+    # The else block is removed as we already show the upgrade prompt at the beginning
+
 # Close the premium features container
 st.markdown('</div>', unsafe_allow_html=True)
 
