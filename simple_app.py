@@ -44,6 +44,19 @@ def init_session_state():
         st.session_state["last_auto_refresh"] = datetime.now()
     if "show_auth" not in st.session_state:
         st.session_state["show_auth"] = False
+    
+    # Landing page specific state
+    if "email_input" not in st.session_state:
+        st.session_state["email_input"] = ""
+    if "submitted" not in st.session_state:
+        st.session_state["submitted"] = False
+    if "valid_email" not in st.session_state:
+        st.session_state["valid_email"] = True
+    if "sentiment_value" not in st.session_state:
+        st.session_state["sentiment_value"] = 0.65  # Default positive sentiment
+    if "sentiment_trend" not in st.session_state:
+        # Create a sample trend for demonstration
+        st.session_state["sentiment_trend"] = [0.3, 0.35, 0.45, 0.5, 0.55, 0.65, 0.7, 0.65, 0.7, 0.75]
 
 def main():
     """Main entry point for the application"""
