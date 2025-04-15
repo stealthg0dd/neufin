@@ -36,6 +36,8 @@ def init_session_state():
         st.session_state["last_update"] = datetime.now()
     if "show_demo" not in st.session_state:
         st.session_state["show_demo"] = False
+    if "show_ai_assistant" not in st.session_state:
+        st.session_state["show_ai_assistant"] = False
     if "auto_refresh" not in st.session_state:
         st.session_state["auto_refresh"] = False
     if "refresh_interval" not in st.session_state:

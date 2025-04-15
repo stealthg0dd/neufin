@@ -18,335 +18,127 @@ st.markdown("""
 # Custom CSS for Mercury-inspired landing page
 st.markdown("""
 <style>
-    /* Base styling */
-    body {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        background: linear-gradient(135deg, #0F1117 0%, #171924 100%);
-        color: #E0E0E0;
-        line-height: 1.6;
-    }
-    
-    .stApp {
-        background: linear-gradient(135deg, #0F1117 0%, #171924 100%);
-    }
-    
-    /* Hide default elements we don't need on the landing page */
-    #MainMenu, header, footer {
-        visibility: hidden;
-    }
-    
-    .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-        max-width: 1000px;
-    }
-    
-    /* Landing page container */
-    .landing-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 90vh;
-        padding: 0 20px;
-        text-align: center;
-    }
-    
-    /* Logo styling */
-    .landing-logo {
-        height: 120px;
-        margin-bottom: 30px;
-    }
-    
-    /* Typography */
-    .landing-title {
-        font-size: 4rem;
-        font-weight: 800;
-        background: linear-gradient(90deg, #7B68EE, #5D4FD3);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 1rem;
-        letter-spacing: -0.03em;
-        line-height: 1.1;
-        text-align: center;
-    }
-    
-    .landing-subtitle {
-        font-size: 1.5rem;
-        color: #ADB3C9;
-        margin-bottom: 2rem;
-        max-width: 750px;
-        text-align: center;
-        letter-spacing: -0.01em;
-    }
-    
-    /* Cards and feature panels */
-    .feature-card {
-        background: rgba(30, 30, 40, 0.4);
-        border-radius: 10px;
-        padding: 30px;
-        margin-bottom: 30px;
-        border: 1px solid rgba(123, 104, 238, 0.2);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-        transition: all 0.3s ease;
-    }
-    
-    .feature-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-        border-color: rgba(123, 104, 238, 0.4);
-    }
-    
-    /* Email input styling */
-    .landing-form {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        width: 100%;
-        max-width: 500px;
-        margin-bottom: 1.5rem;
-        background: rgba(30, 30, 40, 0.4);
-        padding: 30px;
-        border-radius: 12px;
-        border: 1px solid rgba(123, 104, 238, 0.2);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    }
-    
-    .input-container {
-        position: relative;
-        width: 100%;
-        margin-bottom: 1.5rem;
-    }
-    
-    .landing-input {
-        width: 100%;
-        padding: 16px 20px;
-        font-size: 16px;
-        background-color: rgba(20, 20, 30, 0.6);
-        border: 1px solid rgba(123, 104, 238, 0.4);
-        border-radius: 8px;
-        color: #E0E0E0;
-        transition: all 0.3s ease;
-    }
-    
-    .landing-input:focus {
-        border-color: #7B68EE;
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(123, 104, 238, 0.3);
-    }
-    
-    .landing-input::placeholder {
-        color: #6c757d;
-    }
-    
-    /* Button styling */
-    .landing-button {
-        display: inline-block;
-        padding: 14px 32px;
-        font-size: 16px;
-        font-weight: 600;
-        color: white;
-        background: linear-gradient(90deg, #7B68EE, #5D4FD3);
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        text-align: center;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-        margin-top: 5px;
-        width: 100%;
-    }
-    
-    .landing-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 15px rgba(123, 104, 238, 0.4);
-    }
-    
-    /* Footer */
-    .landing-footer {
-        margin-top: 3rem;
-        color: #6c757d;
-        font-size: 0.9rem;
-        text-align: center;
-        padding: 15px;
-        border-top: 1px solid rgba(123, 104, 238, 0.1);
-        width: 100%;
-        max-width: 800px;
-    }
-    
-    /* Pulsing animation for button */
-    @keyframes pulse {
-        0% {
-            box-shadow: 0 0 0 0 rgba(123, 104, 238, 0.5);
-        }
-        70% {
-            box-shadow: 0 0 0 10px rgba(123, 104, 238, 0);
-        }
-        100% {
-            box-shadow: 0 0 0 0 rgba(123, 104, 238, 0);
-        }
-    }
-    
-    .pulse {
-        animation: pulse 2s infinite;
-    }
-    
-    /* Custom shape decorations */
-    .decoration {
-        position: fixed;
-        z-index: -1;
-        opacity: 0.3;
-    }
-    
-    .decoration-1 {
-        top: 10%;
-        left: 5%;
-        width: 300px;
-        height: 300px;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(123, 104, 238, 0.8) 0%, rgba(123, 104, 238, 0) 70%);
-        filter: blur(70px);
-    }
-    
-    .decoration-2 {
-        bottom: 10%;
-        right: 5%;
-        width: 400px;
-        height: 400px;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(93, 79, 211, 0.8) 0%, rgba(93, 79, 211, 0) 70%);
-        filter: blur(80px);
-    }
-    
-    /* Add a third decoration */
-    .decoration-3 {
-        top: 40%;
-        right: 20%;
-        width: 200px;
-        height: 200px;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(60, 50, 180, 0.6) 0%, rgba(60, 50, 180, 0) 70%);
-        filter: blur(60px);
-    }
-    
-    /* Star background */
-    .stars {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: -2;
-        background-image: radial-gradient(2px 2px at 20px 30px, #eee, rgba(0,0,0,0)),
-                        radial-gradient(2px 2px at 40px 70px, #fff, rgba(0,0,0,0)),
-                        radial-gradient(1px 1px at 90px 40px, #fff, rgba(0,0,0,0)),
-                        radial-gradient(1px 1px at 130px 80px, #fff, rgba(0,0,0,0)),
-                        radial-gradient(2px 2px at 160px 120px, #fff, rgba(0,0,0,0));
-        background-repeat: repeat;
-        background-size: 200px 200px;
-        opacity: 0.05;
-    }
-    
-    /* Success message */
-    .success-message {
-        background-color: rgba(0, 200, 83, 0.1);
-        border-left: 4px solid #00C853;
-        padding: 15px;
-        border-radius: 4px;
-        margin-top: 20px;
-        color: #00C853;
-        font-weight: 500;
-        text-align: center;
-        display: none;
-    }
-    
-    /* Error message */
-    .error-message {
-        background-color: rgba(255, 82, 82, 0.1);
-        border-left: 4px solid #FF5252;
-        padding: 15px;
-        border-radius: 4px;
-        margin-top: 20px;
-        color: #FF5252;
-        font-weight: 500;
-        text-align: center;
-        display: none;
-    }
-    
-    /* Panel for sentiment widgets */
-    .sentiment-panel {
-        background: rgba(30, 30, 40, 0.4);
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 30px;
-        border: 1px solid rgba(123, 104, 238, 0.2);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        max-width: 500px;
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    /* Feature box styling */
-    .feature-box {
-        background: rgba(20, 20, 30, 0.6);
-        border-radius: 10px;
-        padding: 15px;
-        transition: all 0.3s ease;
-        border: 1px solid rgba(123, 104, 238, 0.1);
-    }
-    
-    .feature-box:hover {
-        background: rgba(30, 30, 45, 0.6);
-        border-color: rgba(123, 104, 238, 0.3);
-        transform: translateY(-5px);
-    }
-    
-    /* Responsive styling */
-    @media (max-width: 768px) {
-        .landing-title {
-            font-size: 3rem;
-        }
-        
-        .landing-subtitle {
-            font-size: 1.2rem;
-        }
-    }
-    
-    @media (max-width: 480px) {
-        .landing-title {
-            font-size: 2.5rem;
-        }
-        
-        .landing-subtitle {
-            font-size: 1rem;
-        }
-    }
-    
-    /* Style for the Streamlit default elements to match our design */
-    .stTextInput > div > div > input {
-        background-color: rgba(20, 20, 30, 0.6) !important;
-        color: #E0E0E0 !important;
-        border: 1px solid rgba(123, 104, 238, 0.4) !important;
-    }
-    
-    .stTextInput > div > div > input:focus {
-        border-color: #7B68EE !important;
-        box-shadow: 0 0 0 3px rgba(123, 104, 238, 0.3) !important;
-    }
-    
-    .stButton > button {
-        background: linear-gradient(90deg, #7B68EE, #5D4FD3) !important;
-        color: white !important;
-        font-weight: 600 !important;
-        transition: all 0.3s ease !important;
-    }
-    
-    .stButton > button:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 6px 15px rgba(123, 104, 238, 0.4) !important;
-    }
+/* Reset some default styling */
+div[data-testid="stAppViewBlockContainer"] {
+    padding-top: 0 !important;
+}
+
+div[data-testid="stToolbar"] {
+    display: none !important;
+}
+
+div[data-testid="stSidebarContent"] {
+    background-color: #0c0c14 !important;
+}
+
+/* Landing page container */
+.landing-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    position: relative;
+    font-family: 'Inter', sans-serif;
+    color: #E0E0E0;
+}
+
+/* Logo styling */
+.landing-logo {
+    max-width: 180px;
+    margin: 0 auto 30px auto;
+    display: block;
+}
+
+/* Headings */
+.landing-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 10px;
+    color: #7B68EE;
+}
+
+.landing-subtitle {
+    font-size: 1.2rem;
+    text-align: center;
+    margin-bottom: 40px;
+    color: #ADB3C9;
+}
+
+/* Form styling */
+.landing-form {
+    max-width: 500px;
+    margin: 0 auto 30px auto;
+    background: rgba(30, 30, 45, 0.7);
+    border-radius: 8px;
+    padding: 30px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.input-container input {
+    background: rgba(20, 20, 35, 0.7) !important;
+    border: 1px solid rgba(123, 104, 238, 0.3) !important;
+    color: #E0E0E0 !important;
+    border-radius: 4px !important;
+    padding: 12px !important;
+    margin-bottom: 5px !important;
+}
+
+/* Decorative elements */
+.stars {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(ellipse at center, rgba(30, 30, 50, 0.4) 0%, rgba(12, 12, 20, 0.8) 100%);
+    z-index: -3;
+}
+
+.decoration {
+    position: fixed;
+    border-radius: 50%;
+    opacity: 0.1;
+    z-index: -2;
+    background: linear-gradient(45deg, #7B68EE, #4F3EC8);
+}
+
+.decoration-1 {
+    width: 500px;
+    height: 500px;
+    top: -250px;
+    left: -150px;
+}
+
+.decoration-2 {
+    width: 400px;
+    height: 400px;
+    bottom: -200px;
+    right: -100px;
+}
+
+.decoration-3 {
+    width: 300px;
+    height: 300px;
+    bottom: 30%;
+    left: 10%;
+    opacity: 0.05;
+}
+
+.landing-footer {
+    text-align: center;
+    margin-top: 30px;
+    padding: 20px;
+    color: #676B7E;
+    font-size: 0.8rem;
+}
+
+.error-message {
+    color: #FF5252;
+    font-size: 0.9rem;
+    margin-top: -5px;
+    margin-bottom: 15px;
+    display: none;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -619,54 +411,6 @@ def landing_page():
     # Main container
     st.markdown('<div class="landing-container">', unsafe_allow_html=True)
     
-    # Login button in the top right corner - will use the dynamically generated key
-    st.markdown("""
-    <div style="position: absolute; top: 20px; right: 30px;">
-        <button id="header-login-button" 
-                style="background: transparent; color: #7B68EE; border: 1px solid #7B68EE; 
-                       border-radius: 4px; padding: 5px 15px; cursor: pointer; font-weight: 500;">
-            Login
-        </button>
-    </div>
-    <script>
-        // Add click handler after page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('header-login-button').addEventListener('click', function() {
-                // Find all buttons and click the first one that has the login-trigger in its key
-                const buttons = document.querySelectorAll('[data-testid="baseButton-secondary"]');
-                for (let button of buttons) {
-                    if (button.getAttribute('key') && button.getAttribute('key').includes('login-trigger')) {
-                        button.click();
-                        break;
-                    }
-                }
-            });
-        });
-    </script>
-    """, unsafe_allow_html=True)
-        
-    # Store login function in session state
-    if 'show_login_function' not in st.session_state:
-        st.session_state.show_login_function = show_login
-        
-    # Generate a unique key for the hidden button
-    import time
-    unique_trigger_key = f"login-trigger-{int(time.time())}"
-    
-    # Hidden button for JavaScript to click 
-    if st.button("Login", key=unique_trigger_key, on_click=show_login, help="Login to your account"):
-        pass
-    
-    # Hide the button with CSS and store the key in session state for JS to find
-    st.session_state.login_trigger_key = unique_trigger_key
-    st.markdown(f"""
-    <style>
-    [data-testid="baseButton-secondary"][key="{unique_trigger_key}"] {{
-        display: none !important;
-    }}
-    </style>
-    """, unsafe_allow_html=True)
-    
     # Logo
     st.markdown(f'<img src="data:image/png;base64,{open("neufin_new_logo_base64.txt", "r").read()}" class="landing-logo" alt="Neufin AI">', unsafe_allow_html=True)
     
@@ -722,6 +466,14 @@ def landing_page():
     if not st.session_state.valid_email:
         st.markdown('<div class="error-message" style="display: block;">Please enter a valid email address</div>', unsafe_allow_html=True)
     
+    # Submit button with unique key - Get Started comes first now
+    unique_submit_key = f"submit_button_{int(time.time())}"
+    if st.button("🚀 Get Started", key=unique_submit_key, on_click=handle_submit, type="primary", use_container_width=True):
+        # The logic is handled in the handle_submit function
+        pass
+        
+    st.markdown('<div style="margin-bottom: 15px;"></div>', unsafe_allow_html=True)
+    
     # Add AI Assistant option
     ai_assistant_col1, ai_assistant_col2 = st.columns([3, 1])
     with ai_assistant_col1:
@@ -731,17 +483,11 @@ def landing_page():
     with ai_assistant_col2:
         unique_assistant_key = f"ai_assistant_button_{int(time.time())}"
         if st.button("AI Assistant", key=unique_assistant_key, use_container_width=True):
+            # Set session state variables for AI Assistant
             st.session_state.show_ai_assistant = True
-            st.session_state.show_auth = True
+            # Important: don't set show_auth=True as we're not going to login page
+            print("AI Assistant button clicked!")
             st.rerun()
-            
-    st.markdown('<div style="margin-bottom: 15px;"></div>', unsafe_allow_html=True)
-    
-    # Submit button with unique key
-    unique_submit_key = f"submit_button_{int(time.time())}"
-    if st.button("🚀 Get Started", key=unique_submit_key, on_click=handle_submit, type="primary", use_container_width=True):
-        # The logic is handled in the handle_submit function
-        pass
     
     # Add options section with demo and login
     st.markdown('<div style="text-align: center; margin-top: 15px;">', unsafe_allow_html=True)
@@ -750,14 +496,19 @@ def landing_page():
     with col1:
         unique_demo_key = f"try_demo_button_{int(time.time())}"
         if st.button("👀 Try a Demo", key=unique_demo_key, use_container_width=True):
+            # Set flag and print a debug message
             st.session_state.show_demo = True
+            print("Demo button clicked! Setting show_demo to True")
+            # Force rerun to apply the change
             st.rerun()
             
     with col2:
         unique_login_key = f"login_button_{int(time.time())}"
-        if st.button("🔑 Login", key=unique_login_key, use_container_width=True, on_click=show_login):
-            # Logic handled in show_login
-            pass
+        if st.button("🔑 Login", key=unique_login_key, use_container_width=True):
+            # Direct implementation instead of using on_click
+            st.session_state.show_auth = True
+            print("Login button clicked! Setting show_auth to True")
+            st.rerun()
             
     st.markdown('</div>', unsafe_allow_html=True)
     
@@ -784,6 +535,3 @@ def landing_page():
     st.markdown('<div class="landing-footer">Neufin OÜ · A Unit of Ctech Ventures · info@ctechventure.com</div>', unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
-
-# Main entry point
-landing_page()
