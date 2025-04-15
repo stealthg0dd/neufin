@@ -521,7 +521,7 @@ def landing_page():
             st.session_state.show_demo = True  # Set both formats for compatibility
             print("Demo button clicked! Setting show_demo=True")
             # Force redirect to main.py with demo mode
-            st.experimental_set_query_params(demo='true')
+            st.query_params['demo'] = 'true'
             st.rerun()
             
     with col2:

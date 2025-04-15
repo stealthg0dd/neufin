@@ -69,13 +69,12 @@ def apply_dashboard_styling():
 def handle_landing_redirect():
     """Handle redirect from landing page with email parameter"""
     # Check for email in query params
-    query_params = st.experimental_get_query_params()
-    if 'email' in query_params:
+    if 'email' in st.query_params:
         # If email is in params, set it in session state and clear params
-        email = query_params.get('email', [''])[0]
+        email = st.query_params.get('email')
         if email and email.strip():
             st.session_state["prefilled_email"] = email
-            st.experimental_set_query_params()
+            st.query_params.clear()
             # Set the show_auth flag to redirect to login
             st.session_state["show_auth"] = True
             return True
