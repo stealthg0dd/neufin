@@ -1,7 +1,7 @@
 import streamlit as st
 import os
 from landing import landing_page
-from app import run_dashboard
+from app_module import run_dashboard
 from auth_manager import is_authenticated, show_login_ui, init_auth_session
 
 # Initialize auth session
