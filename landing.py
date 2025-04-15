@@ -364,6 +364,12 @@ def init_landing_session_state():
         st.session_state.submitted = False
     if 'valid_email' not in st.session_state:
         st.session_state.valid_email = True
+    if 'redirect_user' not in st.session_state:
+        st.session_state.redirect_user = False
+    if 'redirect_email' not in st.session_state:
+        st.session_state.redirect_email = ""
+    if 'show_demo' not in st.session_state:
+        st.session_state.show_demo = False
     if 'sentiment_value' not in st.session_state:
         st.session_state.sentiment_value = 0.65  # Default positive sentiment
     if 'sentiment_trend' not in st.session_state:
@@ -376,11 +382,10 @@ def handle_submit():
     if is_valid_email(email):
         st.session_state.submitted = True
         st.session_state.valid_email = True
-        # Redirect to the main app with email parameter
-        # In a production app, we would use a proper auth flow here
-        st.query_params.redirect_to = "signup"
-        st.query_params.email = email
-        st.rerun()
+        st.session_state.redirect_user = True
+        # Prepare redirect - the actual redirect will happen at the end of the script,
+        # not inside this callback
+        st.session_state.redirect_email = email
     else:
         st.session_state.valid_email = False
 
@@ -473,11 +478,107 @@ def create_sentiment_trend(values):
     """
     return trend_html
 
+# Function to show demo showcase
+def show_demo_showcase():
+    """Show a demo showcase of the platform features"""
+    from app import create_animated_sentiment_trend, show_predictive_analytics
+    
+    st.markdown("""
+    <div style="text-align: center; margin-bottom: 20px;">
+        <h2 style="font-size: 2rem; color: #7B68EE; margin-bottom: 10px;">Neufin Demo Showcase</h2>
+        <p style="color: #ADB3C9; max-width: 600px; margin: 0 auto;">
+            Experience the power of Neufin's AI-driven financial insights without registration.
+            This demo showcases our core features with sample data.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Create two columns for the demo layout
+    col1, col2 = st.columns([3, 2])
+    
+    with col1:
+        st.subheader("Market Sentiment Analysis")
+        # Show animated sentiment trend
+        create_animated_sentiment_trend(days=10, with_ai_insights=True)
+        
+    with col2:
+        st.subheader("Sector Performance")
+        # Create a sample sector performance chart
+        sector_data = {
+            "Technology": 7.2,
+            "Healthcare": 3.5,
+            "Financial": 1.8,
+            "Energy": -2.3,
+            "Consumer": 4.1
+        }
+        
+        # Sort sectors by performance
+        sorted_sectors = sorted(sector_data.items(), key=lambda x: x[1], reverse=True)
+        
+        # Create bar chart with conditional colors
+        for sector, performance in sorted_sectors:
+            if performance > 5:
+                color = "#00C853"  # Strong positive
+            elif performance > 0:
+                color = "#64DD17"  # Positive
+            elif performance > -3:
+                color = "#FF9100"  # Slight negative
+            else:
+                color = "#FF3D00"  # Strong negative
+                
+            # Calculate width percentage (normalize to 0-100%)
+            max_perf = max([abs(p) for _, p in sorted_sectors])
+            width_pct = abs(performance) / max_perf * 100
+            
+            # Create the bar
+            st.markdown(f"""
+            <div style="margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
+                    <span style="font-weight: 500;">{sector}</span>
+                    <span style="color: {'#ADB3C9' if performance < 0 else '#E0E0E0'};">{performance:+.1f}%</span>
+                </div>
+                <div style="background: rgba(30, 30, 40, 0.4); border-radius: 4px; height: 10px; width: 100%; overflow: hidden;">
+                    <div style="background: {color}; height: 100%; width: {width_pct}%; border-radius: 4px;"></div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+    
+    # Show predictive analytics section
+    show_predictive_analytics()
+    
+    # Add a button to register now
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("""
+    <div style="text-align: center; margin: 30px 0;">
+        <h3 style="color: #E0E0E0; margin-bottom: 15px;">Ready to unlock all features?</h3>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Center the registration button
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if st.button("📝 Sign Up Now", key="register_from_demo", type="primary", use_container_width=True):
+            st.session_state.show_demo = False
+
 # Create the landing page layout
 def landing_page():
     # Initialize session state first
     init_landing_session_state()
     
+    # Handle redirect if user has submitted a valid email
+    if st.session_state.redirect_user and st.session_state.redirect_email:
+        # Set query parameters for redirection
+        st.query_params.redirect_to = "signup"
+        st.query_params.email = st.session_state.redirect_email
+        # Clear the flag to avoid infinite redirects
+        st.session_state.redirect_user = False
+        st.rerun()
+    
+    # If demo is active, show the demo showcase
+    if st.session_state.show_demo:
+        show_demo_showcase()
+        return
+        
     # Decorative elements
     st.markdown('<div class="stars"></div>', unsafe_allow_html=True)
     st.markdown('<div class="decoration decoration-1"></div>', unsafe_allow_html=True)
@@ -531,9 +632,10 @@ def landing_page():
     # Email input field
     st.markdown('<div class="input-container">', unsafe_allow_html=True)
     email = st.text_input("Email address", 
-                         key="email_input", 
+                         key="landing_email_input", 
                          placeholder="Enter your email",
                          label_visibility="collapsed")
+    st.session_state.email_input = email  # Sync with the expected session state variable
     st.markdown('</div>', unsafe_allow_html=True)
     
     # Show error message if email is invalid
@@ -544,6 +646,13 @@ def landing_page():
     if st.button("🚀 Get Started", key="submit_button", on_click=handle_submit, type="primary", use_container_width=True):
         # The logic is handled in the handle_submit function
         pass
+    
+    # Add "or try a demo" option
+    st.markdown('<div style="text-align: center; margin-top: 15px;">', unsafe_allow_html=True)
+    if st.button("👀 Try a Demo First", key="try_demo_button"):
+        st.session_state.show_demo = True
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
     
