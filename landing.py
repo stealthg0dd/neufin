@@ -607,7 +607,7 @@ def landing_page():
     # Login button in the top right corner
     st.markdown("""
     <div style="position: absolute; top: 20px; right: 30px;">
-        <button onclick="document.getElementById('show-login-btn').click();" 
+        <button onclick="document.getElementById('topnav-login-btn').click();" 
                 style="background: transparent; color: #7B68EE; border: 1px solid #7B68EE; 
                        border-radius: 4px; padding: 5px 15px; cursor: pointer; font-weight: 500;">
             Login
